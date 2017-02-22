@@ -206,6 +206,12 @@ type leveldbWriter struct {
 	db       *leveldb.DB
 }
 
+func (w *leveldbWriter) Close() error {
+	if w.db != nil {
+		return w.db.Close()
+	}
+}
+
 func (w *leveldbWriter) WriteEntries(entries []Entry) error {
 	if w.db == nil {
 		db, err := leveldb.OpenFile(w.Filename, nil)
@@ -227,6 +233,7 @@ func (w *leveldbWriter) WriteEntries(entries []Entry) error {
 
 func main() {
 	writer := leveldbWriter{Filename: "hello.ldb"}
+	defer writer.Close()
 	processor := LineProcessor{
 		r: os.Stdin,
 		// f: parsingExtractor,
