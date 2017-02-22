@@ -24,9 +24,6 @@ type Entry struct {
 // KeyFunc extracts a key from a blob.
 type KeyFunc func([]byte) (string, error)
 
-// EntryFunc turns a blob to an entry.
-type EntryFunc func([]byte) (Entry, error)
-
 // EntryWriter writes entries to some storage, e.g. a file or a database.
 type EntryWriter func(entries []Entry) error
 
@@ -155,25 +152,6 @@ func (p LineProcessor) RunWithWorkers() error {
 	<-done
 
 	return processingErr
-
-	// for {
-	// 	b, err := bw.ReadBytes('\n')
-	// 	if err == io.EOF {
-	// 		break
-	// 	}
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	key, err := p.f(b)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	entry := Entry{Key: key}
-	// 	if err := p.w([]Entry{entry}); err != nil {
-	// 		return err
-	// 	}
-	// }
-	// return nil
 }
 
 // renderString tries various ways to get a string out of a given type.
@@ -198,11 +176,12 @@ func renderString(v interface{}) (s string, err error) {
 var key = "finc.record_id"
 var keyPattern = regexp.MustCompile(`ai-[\d]+-[\w]+`)
 
-// regexpExtractor extracts the key via regular expression.
+// regexpExtractor extracts the key via regular expression. Quite fast.
 func regexpExtractor(b []byte) (string, error) {
 	return string(keyPattern.Find(b)), nil
 }
 
+// parsingExtractor unmarshals JSON. Slower, but might be tweakable.
 func parsingExtractor(b []byte) (string, error) {
 	dst := make(map[string]interface{})
 	if err := json.Unmarshal(b, &dst); err != nil {
@@ -225,7 +204,7 @@ func main() {
 		f: regexpExtractor,
 		w: func(entries []Entry) error {
 			for _, e := range entries {
-				log.Println(e)
+				fmt.Printf("%s\t%d\t%d\n", e.Key, e.Offset, e.Length)
 			}
 			return nil
 		}}
