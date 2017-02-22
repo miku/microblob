@@ -288,6 +288,13 @@ func (w *sqliteWriter) Close() error {
 	return nil
 }
 
+func loggingWriter(entries []Entry) error {
+	for _, e := range entries {
+		fmt.Printf("%s\t%d\t%d\n", e.Key, e.Offset, e.Length)
+	}
+	return nil
+}
+
 func main() {
 	// writer := leveldbWriter{Filename: "hello.ldb"}
 	writer := sqliteWriter{Filename: "hello.db"}
@@ -296,12 +303,7 @@ func main() {
 		r: os.Stdin,
 		// f: parsingExtractor,
 		f: regexpExtractor,
-		// w: func(entries []Entry) error {
-		// 	for _, e := range entries {
-		// 		fmt.Printf("%s\t%d\t%d\n", e.Key, e.Offset, e.Length)
-		// 	}
-		// 	return nil
-		// }}
+		// w: loggingWriter,
 		w: writer.WriteEntries,
 	}
 	if err := processor.RunWithWorkers(); err != nil {
