@@ -27,20 +27,27 @@ type Entry struct {
 	Length int64  `json:"l"`
 }
 
+// Backend abstracts various implementations.
+type Backend interface {
+	Get(key string) ([]byte, error)
+	WriteEntries(entries []Entry) error
+	Close() error
+}
+
 // KeyFunc extracts a key from a blob.
 type KeyFunc func([]byte) (string, error)
 
 // EntryWriter writes entries to some storage, e.g. a file or a database.
 type EntryWriter func(entries []Entry) error
 
-// LineProcessor read a line, extracts the key and writes entries.
+// LineProcessor reads a line, extracts the key and writes entries.
 type LineProcessor struct {
 	r io.Reader   // input data
 	f KeyFunc     // extracts a string key from a byte blob
 	w EntryWriter // serializes entries
 }
 
-// Run start processing the input.
+// Run starts processing the input, sequential version.
 func (p LineProcessor) Run() error {
 	bw := bufio.NewReader(p.r)
 	for {
@@ -179,50 +186,53 @@ func renderString(v interface{}) (s string, err error) {
 	return
 }
 
-var key = "finc.record_id"
-var keyPattern = regexp.MustCompile(`ai-[\d]+-[\w]+`)
-
-// regexpExtractor extracts the key via regular expression. Quite fast.
-func regexpExtractor(b []byte) (string, error) {
-	return string(keyPattern.Find(b)), nil
+type RegexpExtractor struct {
+	Pattern *regexp.Regexp
 }
 
-// parsingExtractor unmarshals JSON. Slower, but might be tweakable.
-func parsingExtractor(b []byte) (string, error) {
+func (e RegexpExtractor) ExtractKey(b []byte) (string, error) {
+	return string(e.Pattern.Find(b)), nil
+}
+
+type ParsingExtractor struct {
+	Key string
+}
+
+func (e ParsingExtractor) ExtractKey(b []byte) (string, error) {
 	dst := make(map[string]interface{})
 	if err := json.Unmarshal(b, &dst); err != nil {
 		return "", err
 	}
-	if _, ok := dst[key]; !ok {
-		return "", fmt.Errorf("key %s not found in: %s", key, string(b))
+	if _, ok := dst[e.Key]; !ok {
+		return "", fmt.Errorf("key %s not found in: %s", e.Key, string(b))
 	}
-	s, err := renderString(dst[key])
+	s, err := renderString(dst[e.Key])
 	if err != nil {
 		return "", err
 	}
 	return s, nil
 }
 
-// leveldbWriter writes entries into leveldb.
-type leveldbWriter struct {
+// leveldbBackend writes entries into leveldb.
+type leveldbBackend struct {
 	Filename string
 	db       *leveldb.DB
 }
 
-func (w *leveldbWriter) Close() error {
-	if w.db != nil {
-		return w.db.Close()
+func (b *leveldbBackend) Close() error {
+	if b.db != nil {
+		return b.db.Close()
 	}
 	return nil
 }
 
-func (w *leveldbWriter) WriteEntries(entries []Entry) error {
-	if w.db == nil {
-		db, err := leveldb.OpenFile(w.Filename, nil)
+func (b *leveldbBackend) WriteEntries(entries []Entry) error {
+	if b.db == nil {
+		db, err := leveldb.OpenFile(b.Filename, nil)
 		if err != nil {
 			return err
 		}
-		w.db = db
+		b.db = db
 	}
 	batch := new(leveldb.Batch)
 	for _, entry := range entries {
@@ -232,23 +242,27 @@ func (w *leveldbWriter) WriteEntries(entries []Entry) error {
 		value := append(offset, length...)
 		batch.Put([]byte(entry.Key), value)
 	}
-	return w.db.Write(batch, nil)
+	return b.db.Write(batch, nil)
 }
 
 // sqliteWriter writes entries into a sqlite file
-type sqliteWriter struct {
+type sqliteBackend struct {
 	Filename string
 	db       *sql.DB
 }
 
-func (w *sqliteWriter) WriteEntries(entries []Entry) error {
+func (b *sqliteBackend) Get(key string) ([]byte, error) {
+	return nil, nil
+}
+
+func (b *sqliteBackend) WriteEntries(entries []Entry) error {
 	// create table if necessary
-	if w.db == nil {
-		db, err := sql.Open("sqlite3", w.Filename)
+	if b.db == nil {
+		db, err := sql.Open("sqlite3", b.Filename)
 		if err != nil {
 			return err
 		}
-		w.db = db
+		b.db = db
 	}
 
 	init := `
@@ -259,12 +273,12 @@ func (w *sqliteWriter) WriteEntries(entries []Entry) error {
 	);
 	CREATE INDEX IF NOT EXISTS blob_key ON blob (key);`
 
-	_, err := w.db.Exec(init)
+	_, err := b.db.Exec(init)
 	if err != nil {
 		return fmt.Errorf("%q: %s", err, init)
 	}
 
-	tx, err := w.db.Begin()
+	tx, err := b.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -281,9 +295,9 @@ func (w *sqliteWriter) WriteEntries(entries []Entry) error {
 	return tx.Commit()
 }
 
-func (w *sqliteWriter) Close() error {
-	if w.db != nil {
-		return w.db.Close()
+func (b *sqliteBackend) Close() error {
+	if b.db != nil {
+		return b.db.Close()
 	}
 	return nil
 }
@@ -296,15 +310,17 @@ func loggingWriter(entries []Entry) error {
 }
 
 func main() {
-	// writer := leveldbWriter{Filename: "hello.ldb"}
-	writer := sqliteWriter{Filename: "hello.db"}
+	extractor := ParsingExtractor{Key: "id"}
+	// extractor := RegexpExtractor{Pattern: regexp.MustCompile(`ai-[\d]+-[\w]+`)}
+
+	// writer := leveldbBackend{Filename: "hello.ldb"}
+	writer := sqliteBackend{Filename: "hello.db"}
 	defer writer.Close()
+
 	processor := LineProcessor{
 		r: os.Stdin,
-		// f: parsingExtractor,
-		f: regexpExtractor,
-		// w: loggingWriter,
-		w: writer.WriteEntries,
+		f: extractor.ExtractKey,
+		w: writer.WriteEntries, // loggingWriter
 	}
 	if err := processor.RunWithWorkers(); err != nil {
 		log.Fatal(err)
