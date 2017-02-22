@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"database/sql"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -235,15 +238,58 @@ func (w *leveldbWriter) WriteEntries(entries []Entry) error {
 // sqliteWriter writes entries into a sqlite file
 type sqliteWriter struct {
 	Filename string
+	db       *sql.DB
 }
 
 func (w *sqliteWriter) WriteEntries(entries []Entry) error {
 	// create table if necessary
+	if w.db == nil {
+		db, err := sql.Open("sqlite3", w.Filename)
+		if err != nil {
+			return err
+		}
+		w.db = db
+	}
+
+	init := `
+	CREATE TABLE IF NOT EXISTS blob (
+		key    TEXT    NOT NULL PRIMARY KEY,
+		offset INTEGER NOT NULL,
+		length INTEGER NOT NULL
+	);`
+
+	_, err := w.db.Exec(init)
+	if err != nil {
+		return fmt.Errorf("%q: %s", err, init)
+	}
+
+	tx, err := w.db.Begin()
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare("insert into blob(key, offset, length) values(?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	for _, entry := range entries {
+		if _, err = stmt.Exec(entry.Key, entry.Offset, entry.Length); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (w *sqliteWriter) Close() error {
+	if w.db != nil {
+		return w.db.Close()
+	}
 	return nil
 }
 
 func main() {
-	writer := leveldbWriter{Filename: "hello.ldb"}
+	// writer := leveldbWriter{Filename: "hello.ldb"}
+	writer := sqliteWriter{Filename: "hello.db"}
 	defer writer.Close()
 	processor := LineProcessor{
 		r: os.Stdin,
