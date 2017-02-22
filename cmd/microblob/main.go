@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +13,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/syndtr/goleveldb/leveldb"
 )
 
 // Entry associates a key with a section in a file specified by offset and length.
@@ -197,17 +200,45 @@ func parsingExtractor(b []byte) (string, error) {
 	return s, nil
 }
 
+// leveldbWriter writes entries into leveldb.
+type leveldbWriter struct {
+	Filename string
+	db       *leveldb.DB
+}
+
+func (w *leveldbWriter) WriteEntries(entries []Entry) error {
+	if w.db == nil {
+		db, err := leveldb.OpenFile(w.Filename, nil)
+		if err != nil {
+			return err
+		}
+		w.db = db
+	}
+	batch := new(leveldb.Batch)
+	for _, entry := range entries {
+		offset, length := make([]byte, 8), make([]byte, 8)
+		binary.PutVarint(offset, entry.Offset)
+		binary.PutVarint(length, entry.Length)
+		value := append(offset, length...)
+		batch.Put([]byte(entry.Key), value)
+	}
+	return w.db.Write(batch, nil)
+}
+
 func main() {
+	writer := leveldbWriter{Filename: "hello.ldb"}
 	processor := LineProcessor{
 		r: os.Stdin,
 		// f: parsingExtractor,
 		f: regexpExtractor,
-		w: func(entries []Entry) error {
-			for _, e := range entries {
-				fmt.Printf("%s\t%d\t%d\n", e.Key, e.Offset, e.Length)
-			}
-			return nil
-		}}
+		// w: func(entries []Entry) error {
+		// 	for _, e := range entries {
+		// 		fmt.Printf("%s\t%d\t%d\n", e.Key, e.Offset, e.Length)
+		// 	}
+		// 	return nil
+		// }}
+		w: writer.WriteEntries,
+	}
 	if err := processor.RunWithWorkers(); err != nil {
 		log.Fatal(err)
 	}
