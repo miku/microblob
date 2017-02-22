@@ -231,6 +231,16 @@ func (w *leveldbWriter) WriteEntries(entries []Entry) error {
 	return w.db.Write(batch, nil)
 }
 
+// sqliteWriter writes entries into a sqlite file
+type sqliteWriter struct {
+	Filename string
+}
+
+func (w *sqliteWriter) WriteEntries(entries []Entry) error {
+	// create table if necessary
+	return nil
+}
+
 func main() {
 	writer := leveldbWriter{Filename: "hello.ldb"}
 	defer writer.Close()
