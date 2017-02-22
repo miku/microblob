@@ -256,7 +256,8 @@ func (w *sqliteWriter) WriteEntries(entries []Entry) error {
 		key    TEXT    NOT NULL PRIMARY KEY,
 		offset INTEGER NOT NULL,
 		length INTEGER NOT NULL
-	);`
+	);
+	CREATE INDEX IF NOT EXISTS blob_key ON blob (key);`
 
 	_, err := w.db.Exec(init)
 	if err != nil {
