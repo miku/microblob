@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/binary"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -32,6 +33,10 @@ type Backend interface {
 	Get(key string) ([]byte, error)
 	WriteEntries(entries []Entry) error
 	Close() error
+}
+
+type KeyExtractor interface {
+	ExtractKey([]byte) (string, error)
 }
 
 // KeyFunc extracts a key from a blob.
@@ -219,6 +224,10 @@ type leveldbBackend struct {
 	db       *leveldb.DB
 }
 
+func (b *leveldbBackend) Get(key string) ([]byte, error) {
+	return nil, nil
+}
+
 func (b *leveldbBackend) Close() error {
 	if b.db != nil {
 		return b.db.Close()
@@ -310,17 +319,41 @@ func loggingWriter(entries []Entry) error {
 }
 
 func main() {
-	extractor := ParsingExtractor{Key: "id"}
-	// extractor := RegexpExtractor{Pattern: regexp.MustCompile(`ai-[\d]+-[\w]+`)}
+	pattern := flag.String("p", "", "regular expression to use as key extractor")
+	keypath := flag.String("k", "", "key to extract")
+	bname := flag.String("b", "sqlite", "backend to use: tsv, leveldb, sqlite")
+	bfile := flag.String("f", "data.db", "filename to use for backend")
 
-	// writer := leveldbBackend{Filename: "hello.ldb"}
-	writer := sqliteBackend{Filename: "hello.db"}
-	defer writer.Close()
+	flag.Parse()
+
+	if *pattern == "" && *keypath == "" {
+		log.Fatal("key or pattern required")
+	}
+
+	var backend Backend
+	switch *bname {
+	default:
+		backend = &sqliteBackend{Filename: *bfile}
+	case "tsv":
+		log.Fatal("not a full backend yet")
+	case "leveldb":
+		backend = &leveldbBackend{Filename: *bfile}
+	}
+	defer backend.Close()
+
+	var extractor KeyExtractor
+
+	if *pattern != "" {
+		extractor = RegexpExtractor{Pattern: regexp.MustCompile(*pattern)}
+	}
+	if *keypath != "" {
+		extractor = ParsingExtractor{Key: *keypath}
+	}
 
 	processor := LineProcessor{
 		r: os.Stdin,
 		f: extractor.ExtractKey,
-		w: writer.WriteEntries, // loggingWriter
+		w: backend.WriteEntries, // loggingWriter
 	}
 	if err := processor.RunWithWorkers(); err != nil {
 		log.Fatal(err)
