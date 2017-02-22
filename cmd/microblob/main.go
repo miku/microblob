@@ -210,6 +210,7 @@ func (w *leveldbWriter) Close() error {
 	if w.db != nil {
 		return w.db.Close()
 	}
+	return nil
 }
 
 func (w *leveldbWriter) WriteEntries(entries []Entry) error {
