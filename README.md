@@ -97,6 +97,11 @@ $ curl -s localhost:8820/ai-121-b2FpOmFyWGl2Lm9yZzowNzA0LjAwMjQ | jq .
 }
 ```
 
+Example setup
+-------------
+
+![](https://raw.githubusercontent.com/miku/microblob/master/docs/asciicast.gif)
+
 Performance
 -----------
 
