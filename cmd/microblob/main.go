@@ -2,12 +2,14 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"reflect"
 	"regexp"
@@ -15,12 +17,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	_ "github.com/mattn/go-sqlite3"
-
-	"net/http"
-
-	"bytes"
 
 	"github.com/syndtr/goleveldb/leveldb"
 )
