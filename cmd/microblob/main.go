@@ -12,7 +12,7 @@ import (
 )
 
 // Version of application.
-const Version = "0.1.4"
+const Version = "0.1.5"
 
 // debugBackend just writes the key, value and offsets to standard output.
 type debugBackend struct{}
