@@ -5,16 +5,27 @@ Serve JSON from file via HTTP. Do not store the blobs in a key-value store
 again, just the offset and lengths of the documents inside a file.
 
 ```
-+--------+       +-----------------------------+
-|request +-------> find offset and length      |
-+--------+       | for key in backend [leveldb]|
-                 |                             |
-+---------+      +------+----------------------+
-|response <--+          |
-+---------+  |          |
-             +---+------v--------+
-                 | seek and read |
-                 +---------------+
+           +-------------------------------------------------------------------------------+
+           |                                                                               |
+           |                                                                               |
++------->  | HTTP request  +-------> lookup offset and length +---------------->  LevelDB  |
+           |                                                                               |
+           |                                              +   <----------------+           |
+           |                                              |                                |
+           |                                              |                                |
+<-------+  | HTTP response <-------+ seek and read <------+                                |
+           |                                                                               |
+           |                           ^  +                                                |
+           |                           |  |                                                |
+           |                           |  |                                                |
+           |                           |  |                                                |
+           |                           |  |                                                |
+           +-------------------------------------------------------------------------------+
+                                       |  |
+                                       |  v
+
+                                     blobfile
+
 ```
 
 Usage
