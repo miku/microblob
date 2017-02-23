@@ -393,11 +393,11 @@ func main() {
 		}
 	}
 
+	// Index content.
 	if *pattern == "" && *keypath == "" {
 		log.Fatal("key or pattern required")
 	}
 
-	// Index content.
 	var extractor KeyExtractor
 
 	if *pattern != "" {
@@ -411,6 +411,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer file.Close()
 
 	processor := LineProcessor{
 		r: file, // os.Stdin
