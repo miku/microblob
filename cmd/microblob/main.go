@@ -22,7 +22,7 @@ import (
 )
 
 // Version of application.
-const Version = "0.1.1"
+const Version = "0.1.2"
 
 // Entry associates a key with a section in a file specified by offset and length.
 type Entry struct {
