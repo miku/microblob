@@ -1,6 +1,6 @@
 Summary:    A simple key value store for JSON data.
 Name:       mublob
-Version:    0.1.0
+Version:    0.1.1
 Release:    0
 License:    GPL
 BuildArch:  x86_64
