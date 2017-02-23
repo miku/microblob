@@ -13,10 +13,15 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+
+	"net/http"
+
+	"bytes"
 
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -220,12 +225,69 @@ func (e ParsingExtractor) ExtractKey(b []byte) (string, error) {
 
 // leveldbBackend writes entries into leveldb.
 type leveldbBackend struct {
+	Blobfile string
+	blob     *os.File
 	Filename string
 	db       *leveldb.DB
+	sync.Mutex
+}
+
+func (b *leveldbBackend) openBlob() error {
+	if b.blob != nil {
+		return nil
+	}
+	file, err := os.Open(b.Blobfile)
+	if err != nil {
+		return err
+	}
+	b.blob = file
+	return nil
 }
 
 func (b *leveldbBackend) Get(key string) ([]byte, error) {
-	return nil, nil
+	if b.db == nil {
+		db, err := leveldb.OpenFile(b.Filename, nil)
+		if err != nil {
+			return nil, err
+		}
+		b.db = db
+	}
+
+	value, err := b.db.Get([]byte(key), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	obuf := bytes.NewBuffer(value[:8])
+	lbuf := bytes.NewBuffer(value[8:])
+
+	offset, err := binary.ReadVarint(obuf)
+	if err != nil {
+		return nil, err
+	}
+
+	length, err := binary.ReadVarint(lbuf)
+	if err != nil {
+		return nil, err
+	}
+
+	if b.blob == nil {
+		if err := b.openBlob(); err != nil {
+			return nil, err
+		}
+	}
+
+	// Retrieve content.
+	b.Lock()
+	defer b.Unlock()
+	if _, err := b.blob.Seek(offset, io.SeekStart); err != nil {
+		return nil, err
+	}
+	data := make([]byte, length)
+	if _, err := b.blob.Read(data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (b *leveldbBackend) Close() error {
@@ -256,15 +318,68 @@ func (b *leveldbBackend) WriteEntries(entries []Entry) error {
 
 // sqliteWriter writes entries into a sqlite file
 type sqliteBackend struct {
-	Filename string
+	Blobfile string // name of file to server
+	blob     *os.File
+	Filename string // database file name
 	db       *sql.DB
+	sync.Mutex
+}
+
+func (b *sqliteBackend) openBlob() error {
+	if b.blob != nil {
+		return nil
+	}
+	file, err := os.Open(b.Blobfile)
+	if err != nil {
+		return err
+	}
+	b.blob = file
+	return nil
 }
 
 func (b *sqliteBackend) Get(key string) ([]byte, error) {
-	return nil, nil
+	if b.db == nil {
+		db, err := sql.Open("sqlite3", b.Filename)
+		if err != nil {
+			return nil, err
+		}
+		b.db = db
+	}
+
+	// Query for region.
+	stmt, err := b.db.Prepare("select offset, length from blob where key = ?")
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	var offset, length int64
+	err = stmt.QueryRow(key).Scan(&offset, &length)
+	if err != nil {
+		return nil, err
+	}
+
+	if b.blob == nil {
+		if err := b.openBlob(); err != nil {
+			return nil, err
+		}
+	}
+
+	// Retrieve content.
+	b.Lock()
+	defer b.Unlock()
+	if _, err := b.blob.Seek(offset, io.SeekStart); err != nil {
+		return nil, err
+	}
+	data := make([]byte, length)
+	if _, err := b.blob.Read(data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (b *sqliteBackend) WriteEntries(entries []Entry) error {
+	log.Printf("writing %d entries ...", len(entries))
 	// create table if necessary
 	if b.db == nil {
 		db, err := sql.Open("sqlite3", b.Filename)
@@ -306,7 +421,14 @@ func (b *sqliteBackend) WriteEntries(entries []Entry) error {
 
 func (b *sqliteBackend) Close() error {
 	if b.db != nil {
-		return b.db.Close()
+		if err := b.db.Close(); err != nil {
+			return err
+		}
+	}
+	if b.blob != nil {
+		if err := b.blob.Close(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -318,29 +440,79 @@ func loggingWriter(entries []Entry) error {
 	return nil
 }
 
+// filterEmpty removes empty strings from a slice array.
+func filterEmpty(ss []string) (filtered []string) {
+	for _, s := range ss {
+		if strings.TrimSpace(s) == "" {
+			continue
+		}
+		filtered = append(filtered, s)
+	}
+	return
+}
+
+// BlobHandler serves blobs.
+type BlobHandler struct {
+	Backend Backend
+}
+
+func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	parts := filterEmpty(strings.Split(r.URL.Path, "/"))
+	if len(parts) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`key is required`))
+		return
+	}
+	key := strings.TrimSpace(parts[0])
+	b, err := h.Backend.Get(key)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(b)
+}
+
 func main() {
 	pattern := flag.String("p", "", "regular expression to use as key extractor")
 	keypath := flag.String("k", "", "key to extract")
-	bname := flag.String("b", "sqlite", "backend to use: tsv, leveldb, sqlite")
-	bfile := flag.String("f", "data.db", "filename to use for backend")
+	dbname := flag.String("b", "sqlite", "backend to use: tsv, leveldb, sqlite")
+	dbfile := flag.String("f", "data.db", "filename to use for backend")
+	blobfile := flag.String("c", "", "file to index or serve")
+	serve := flag.Bool("serve", false, "serve file")
+	addr := flag.String("addr", "127.0.0.1:8820", "address to serve")
 
 	flag.Parse()
+
+	if *blobfile == "" {
+		log.Fatal("need a file to serve")
+	}
+
+	var backend Backend
+
+	switch *dbname {
+	default:
+		backend = &leveldbBackend{Filename: *dbfile, Blobfile: *blobfile}
+	case "tsv":
+		log.Fatal("not a full backend yet")
+	case "sqlite":
+		backend = &sqliteBackend{Filename: *dbfile, Blobfile: *blobfile}
+	}
+	defer backend.Close()
+
+	// Serve content.
+	if *serve {
+		http.Handle("/", &BlobHandler{Backend: backend})
+		if err := http.ListenAndServe(*addr, nil); err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	if *pattern == "" && *keypath == "" {
 		log.Fatal("key or pattern required")
 	}
 
-	var backend Backend
-	switch *bname {
-	default:
-		backend = &sqliteBackend{Filename: *bfile}
-	case "tsv":
-		log.Fatal("not a full backend yet")
-	case "leveldb":
-		backend = &leveldbBackend{Filename: *bfile}
-	}
-	defer backend.Close()
-
+	// Index content.
 	var extractor KeyExtractor
 
 	if *pattern != "" {
@@ -350,8 +522,13 @@ func main() {
 		extractor = ParsingExtractor{Key: *keypath}
 	}
 
+	file, err := os.Open(*blobfile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	processor := LineProcessor{
-		r: os.Stdin,
+		r: file, // os.Stdin
 		f: extractor.ExtractKey,
 		w: backend.WriteEntries, // loggingWriter
 	}
