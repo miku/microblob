@@ -237,6 +237,8 @@ type leveldbBackend struct {
 }
 
 func (b *leveldbBackend) openBlob() error {
+	// TODO(miku): Store a SHA of the origin file in the blob store, compare with the
+	// SHA of the currently used blob file.
 	if b.blob != nil {
 		return nil
 	}
@@ -301,6 +303,8 @@ func (b *leveldbBackend) Close() error {
 	return nil
 }
 
+// WriteEntries writes entries as batch into LevelDB. The value is fixed 16 byte
+// slice, first 8 bytes represents the offset, last 8 bytes the length.
 func (b *leveldbBackend) WriteEntries(entries []Entry) error {
 	if b.db == nil {
 		db, err := leveldb.OpenFile(b.Filename, nil)
