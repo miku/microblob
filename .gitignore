@@ -25,4 +25,5 @@ _testmain.go
 
 /microblob
 *.ldb
-/fixtures
+data.db
+/fixtures/example.ldj
