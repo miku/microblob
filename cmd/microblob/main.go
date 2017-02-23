@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"database/sql"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
@@ -40,6 +39,7 @@ type Backend interface {
 	Close() error
 }
 
+// KeyExtractor extracts a string key from data.
 type KeyExtractor interface {
 	ExtractKey([]byte) (string, error)
 }
@@ -196,18 +196,22 @@ func renderString(v interface{}) (s string, err error) {
 	return
 }
 
+// RegexpExtractor extract a key via regular expression.
 type RegexpExtractor struct {
 	Pattern *regexp.Regexp
 }
 
+// ExtractKey returns the key found in a byte slice.
 func (e RegexpExtractor) ExtractKey(b []byte) (string, error) {
 	return string(e.Pattern.Find(b)), nil
 }
 
+// ParsingExtractor parses JSON and extracts the top-level key at the given path.
 type ParsingExtractor struct {
 	Key string
 }
 
+// ExtractKey extracts the key.
 func (e ParsingExtractor) ExtractKey(b []byte) (string, error) {
 	dst := make(map[string]interface{})
 	if err := json.Unmarshal(b, &dst); err != nil {
@@ -316,123 +320,6 @@ func (b *leveldbBackend) WriteEntries(entries []Entry) error {
 	return b.db.Write(batch, nil)
 }
 
-// sqliteWriter writes entries into a sqlite file
-type sqliteBackend struct {
-	Blobfile string // name of file to server
-	blob     *os.File
-	Filename string // database file name
-	db       *sql.DB
-	sync.Mutex
-}
-
-func (b *sqliteBackend) openBlob() error {
-	if b.blob != nil {
-		return nil
-	}
-	file, err := os.Open(b.Blobfile)
-	if err != nil {
-		return err
-	}
-	b.blob = file
-	return nil
-}
-
-func (b *sqliteBackend) Get(key string) ([]byte, error) {
-	if b.db == nil {
-		db, err := sql.Open("sqlite3", b.Filename)
-		if err != nil {
-			return nil, err
-		}
-		b.db = db
-	}
-
-	// Query for region.
-	stmt, err := b.db.Prepare("select offset, length from blob where key = ?")
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-
-	var offset, length int64
-	err = stmt.QueryRow(key).Scan(&offset, &length)
-	if err != nil {
-		return nil, err
-	}
-
-	if b.blob == nil {
-		if err := b.openBlob(); err != nil {
-			return nil, err
-		}
-	}
-
-	// Retrieve content.
-	b.Lock()
-	defer b.Unlock()
-	if _, err := b.blob.Seek(offset, io.SeekStart); err != nil {
-		return nil, err
-	}
-	data := make([]byte, length)
-	if _, err := b.blob.Read(data); err != nil {
-		return nil, err
-	}
-	return data, nil
-}
-
-func (b *sqliteBackend) WriteEntries(entries []Entry) error {
-	log.Printf("writing %d entries ...", len(entries))
-	// create table if necessary
-	if b.db == nil {
-		db, err := sql.Open("sqlite3", b.Filename)
-		if err != nil {
-			return err
-		}
-		b.db = db
-	}
-
-	init := `
-	CREATE TABLE IF NOT EXISTS blob (
-		key    TEXT    NOT NULL PRIMARY KEY,
-		offset INTEGER NOT NULL,
-		length INTEGER NOT NULL
-	);
-	CREATE INDEX IF NOT EXISTS blob_key ON blob (key);`
-
-	_, err := b.db.Exec(init)
-	if err != nil {
-		return fmt.Errorf("%q: %s", err, init)
-	}
-
-	tx, err := b.db.Begin()
-	if err != nil {
-		return err
-	}
-	stmt, err := tx.Prepare("insert into blob(key, offset, length) values(?, ?, ?)")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-	for _, entry := range entries {
-		if _, err = stmt.Exec(entry.Key, entry.Offset, entry.Length); err != nil {
-			return err
-		}
-	}
-	return tx.Commit()
-}
-
-func (b *sqliteBackend) Close() error {
-	if b.db != nil {
-		if err := b.db.Close(); err != nil {
-			return err
-		}
-	}
-	if b.blob != nil {
-		if err := b.blob.Close(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func loggingWriter(entries []Entry) error {
 	for _, e := range entries {
 		fmt.Printf("%s\t%d\t%d\n", e.Key, e.Offset, e.Length)
@@ -476,7 +363,7 @@ func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	pattern := flag.String("p", "", "regular expression to use as key extractor")
 	keypath := flag.String("k", "", "key to extract")
-	dbname := flag.String("b", "sqlite", "backend to use: tsv, leveldb, sqlite")
+	dbname := flag.String("b", "leveldb", "backend to use: tsv, leveldb, sqlite")
 	dbfile := flag.String("f", "data.db", "filename to use for backend")
 	blobfile := flag.String("c", "", "file to index or serve")
 	serve := flag.Bool("serve", false, "serve file")
@@ -495,8 +382,6 @@ func main() {
 		backend = &leveldbBackend{Filename: *dbfile, Blobfile: *blobfile}
 	case "tsv":
 		log.Fatal("not a full backend yet")
-	case "sqlite":
-		backend = &sqliteBackend{Filename: *dbfile, Blobfile: *blobfile}
 	}
 	defer backend.Close()
 
