@@ -52,9 +52,10 @@ type EntryWriter func(entries []Entry) error
 
 // LineProcessor reads a line, extracts the key and writes entries.
 type LineProcessor struct {
-	r io.Reader   // input data
-	f KeyFunc     // extracts a string key from a byte blob
-	w EntryWriter // serializes entries
+	r         io.Reader   // input data
+	f         KeyFunc     // extracts a string key from a byte blob
+	w         EntryWriter // serializes entries
+	BatchSize int         // number of lines in a batch
 }
 
 // Run starts processing the input, sequential version.
@@ -154,7 +155,7 @@ func (p LineProcessor) RunWithWorkers() error {
 		if err != nil {
 			return err
 		}
-		if len(batch) == 50000 {
+		if len(batch) == p.BatchSize {
 			bb := make([][]byte, len(batch))
 			copy(bb, batch)
 			work <- workPackage{docs: bb, offset: offset}
@@ -368,6 +369,7 @@ func main() {
 	blobfile := flag.String("file", "", "file to index or serve")
 	serve := flag.Bool("serve", false, "serve file")
 	addr := flag.String("addr", "127.0.0.1:8820", "address to serve")
+	batchsize := flag.Int("batch", 100000, "number of lines in a batch")
 
 	flag.Parse()
 
@@ -414,9 +416,10 @@ func main() {
 	defer file.Close()
 
 	processor := LineProcessor{
-		r: file, // os.Stdin
-		f: extractor.ExtractKey,
-		w: backend.WriteEntries, // loggingWriter
+		r:         file, // os.Stdin
+		f:         extractor.ExtractKey,
+		w:         backend.WriteEntries, // loggingWriter
+		BatchSize: *batchsize,
 	}
 	if err := processor.RunWithWorkers(); err != nil {
 		log.Fatal(err)
