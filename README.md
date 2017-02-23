@@ -1,11 +1,10 @@
 microblob
 =========
 
-Serve documents for a newline delimited JSON file via HTTP. Do not store the
-blobs in a key-value store again, just the offsets and lengths of the documents
-inside a file.
+Serve documents of a newline delimited (JSON) file via HTTP. Do not store the
+contents, just the offsets and lengths of the documents.
 
-The input documents must be newline delimited. It does not necessary needs to be JSON.
+The input documents must be newline delimited.
 
 ```
                     Index a file into a database. Specify JSON key or regular expression (faster).
@@ -45,10 +44,11 @@ The input documents must be newline delimited. It does not necessary needs to be
 
 The goal is to serve a large number of keys, while being memory efficient and
 fast to index. Creating a blob database with 120 million entries takes about an
-hour, consumes few GB memory during creation and only a few GB on disk and will
-be served fast from memory, as soon as OS cache parts of the blob file.
+hour, consumes little memory during preprocessing and only a few GB disk space
+and will be served fast from memory, as soon as the OS caches parts of the blob
+file.
 
-It should be possible to use this setup as is for twice or more keys.
+It should be possible to use this setup as is for slightly larger settings as well.
 
 Usage
 -----
@@ -57,23 +57,23 @@ Usage
 $ microblob -h
 Usage of microblob:
   -addr string
-    	address to serve (default "127.0.0.1:8820")
+            address to serve (default "127.0.0.1:8820")
   -backend string
-    	backend to use, currently only leveldb (default "leveldb")
+            backend to use, currently only leveldb (default "leveldb")
   -batch int
-    	number of lines in a batch (default 100000)
+            number of lines in a batch (default 100000)
   -db string
-    	filename to use for backend (default "data.db")
+            filename to use for backend (default "data.db")
   -file string
-    	file to index or serve
+            file to index or serve
   -key string
-    	key to extract
+            key to extract
   -r string
-    	regular expression to use as key extractor
+            regular expression to use as key extractor
   -serve
-    	serve file
+            serve file
   -version
-    	show version and exit
+            show version and exit
 ```
 
 ```shell
