@@ -134,4 +134,39 @@ Percentage of the requests served within a certain time (ms)
   98%      1
   99%      1
  100%      3 (longest request)
+
+$ hey -n 10000 http://localhost:8820/ai-48-R0xJUF9fTmpneU9UTTFPVUJBUURZNE1qa3pOVGs
+All requests done.
+
+Summary:
+  Total:	0.2991 secs
+  Slowest:	0.0326 secs
+  Fastest:	0.0001 secs
+  Average:	0.0014 secs
+  Requests/sec:	33433.4975
+
+Status code distribution:
+  [200]	10000 responses
+
+Response time histogram:
+  0.000 [1]	|
+  0.003 [9369]	|∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  0.007 [519]	|∎∎
+  0.010 [75]	|
+  0.013 [25]	|
+  0.016 [7]	|
+  0.020 [2]	|
+  0.023 [0]	|
+  0.026 [1]	|
+  0.029 [0]	|
+  0.033 [1]	|
+
+Latency distribution:
+  10% in 0.0003 secs
+  25% in 0.0006 secs
+  50% in 0.0011 secs
+  75% in 0.0017 secs
+  90% in 0.0028 secs
+  95% in 0.0036 secs
+  99% in 0.0068 secs
 ```
