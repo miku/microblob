@@ -1,0 +1,9 @@
+Package: microblob
+Version: 0.1.3
+Section: utils
+Priority: optional
+Architecture: amd64
+Essential: no
+Depends: libc6 (>= 2.12)
+Maintainer: Martin Czygan <martin.czygan@uni-leipzig.de>
+Description: A simple key value store for JSON data.
