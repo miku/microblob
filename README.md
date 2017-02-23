@@ -76,4 +76,5 @@ $ wc -l fixtures/example.ldj
 
 $ time microblob -db data.db -file fixtures/example.ldj -key finc.record_id
 
+$ ab -c 10 -n 10000 http://127.0.0.1:8820/ai-121-b2FpOmFyWGl2Lm9yZzowNzA0LjAwNTA
 ```

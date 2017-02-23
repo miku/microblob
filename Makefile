@@ -6,6 +6,7 @@ PKGNAME = microblob
 all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
+	go get -v ./...
 	go build -o $@ $<
 
 clean:
