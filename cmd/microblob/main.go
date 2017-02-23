@@ -25,6 +25,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
+// Version of application.
 const Version = "0.1.1"
 
 // Entry associates a key with a section in a file specified by offset and length.

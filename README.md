@@ -24,19 +24,23 @@ Usage
 $ microblob -h
 Usage of microblob:
   -addr string
-        address to serve (default "127.0.0.1:8820")
+          address to serve (default "127.0.0.1:8820")
   -backend string
-        backend to use: tsv, leveldb, sqlite (default "leveldb")
+          backend to use, currently only leveldb (default "leveldb")
+  -batch int
+          number of lines in a batch (default 100000)
   -db string
-        filename to use for backend (default "data.db")
+          filename to use for backend (default "data.db")
   -file string
-        file to index or serve
+          file to index or serve
   -key string
-        key to extract
+          key to extract
   -r string
-        regular expression to use as key extractor
+          regular expression to use as key extractor
   -serve
-        serve file
+          serve file
+  -version
+          show version and exit
 ```
 
 ```shell
