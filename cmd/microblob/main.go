@@ -250,13 +250,21 @@ func (b *leveldbBackend) openBlob() error {
 	return nil
 }
 
+func (b *leveldbBackend) openDatabase() error {
+	if b.db != nil {
+		return nil
+	}
+	db, err := leveldb.OpenFile(b.Filename, nil)
+	if err != nil {
+		return err
+	}
+	b.db = db
+	return nil
+}
+
 func (b *leveldbBackend) Get(key string) ([]byte, error) {
-	if b.db == nil {
-		db, err := leveldb.OpenFile(b.Filename, nil)
-		if err != nil {
-			return nil, err
-		}
-		b.db = db
+	if err := b.openDatabase(); err != nil {
+		return nil, err
 	}
 
 	value, err := b.db.Get([]byte(key), nil)
@@ -277,10 +285,8 @@ func (b *leveldbBackend) Get(key string) ([]byte, error) {
 		return nil, err
 	}
 
-	if b.blob == nil {
-		if err := b.openBlob(); err != nil {
-			return nil, err
-		}
+	if err := b.openBlob(); err != nil {
+		return nil, err
 	}
 
 	// Retrieve content.
@@ -298,7 +304,14 @@ func (b *leveldbBackend) Get(key string) ([]byte, error) {
 
 func (b *leveldbBackend) Close() error {
 	if b.db != nil {
-		return b.db.Close()
+		if err := b.db.Close(); err != nil {
+			return err
+		}
+	}
+	if b.blob != nil {
+		if err := b.blob.Close(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -306,12 +319,8 @@ func (b *leveldbBackend) Close() error {
 // WriteEntries writes entries as batch into LevelDB. The value is fixed 16 byte
 // slice, first 8 bytes represents the offset, last 8 bytes the length.
 func (b *leveldbBackend) WriteEntries(entries []Entry) error {
-	if b.db == nil {
-		db, err := leveldb.OpenFile(b.Filename, nil)
-		if err != nil {
-			return err
-		}
-		b.db = db
+	if err := b.openDatabase(); err != nil {
+		return err
 	}
 	batch := new(leveldb.Batch)
 	for _, entry := range entries {
