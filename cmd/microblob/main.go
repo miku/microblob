@@ -25,6 +25,8 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
+const Version = "0.1.1"
+
 // Entry associates a key with a section in a file specified by offset and length.
 type Entry struct {
 	Key    string `json:"k"`
@@ -370,8 +372,14 @@ func main() {
 	serve := flag.Bool("serve", false, "serve file")
 	addr := flag.String("addr", "127.0.0.1:8820", "address to serve")
 	batchsize := flag.Int("batch", 100000, "number of lines in a batch")
+	version := flag.Bool("version", false, "show version and exit")
 
 	flag.Parse()
+
+	if *version {
+		fmt.Println(Version)
+		os.Exit(0)
+	}
 
 	if *blobfile == "" {
 		log.Fatal("need a file to index or serve")
