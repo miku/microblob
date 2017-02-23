@@ -1,7 +1,19 @@
 microblob
 =========
 
-Microblob serves JSON from file via HTTP.
+Serve JSON from file via HTTP. Do not store the blobs in a key-value store
+again, just the offset and lengths of the documents inside a file.
+
+```
+request key -> find offset and length -
+                 for Key in backend     \
+<- response                               \
+       ^                             seek and read data
+       |                                from file
+       |                                  /
+       ----------------------------------´
+
+```
 
 Usage
 -----
