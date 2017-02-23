@@ -361,11 +361,11 @@ func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	pattern := flag.String("p", "", "regular expression to use as key extractor")
-	keypath := flag.String("k", "", "key to extract")
-	dbname := flag.String("b", "leveldb", "backend to use: tsv, leveldb, sqlite")
-	dbfile := flag.String("f", "data.db", "filename to use for backend")
-	blobfile := flag.String("c", "", "file to index or serve")
+	pattern := flag.String("r", "", "regular expression to use as key extractor")
+	keypath := flag.String("key", "", "key to extract")
+	dbname := flag.String("backend", "leveldb", "backend to use, currently only leveldb")
+	dbfile := flag.String("db", "data.db", "filename to use for backend")
+	blobfile := flag.String("file", "", "file to index or serve")
 	serve := flag.Bool("serve", false, "serve file")
 	addr := flag.String("addr", "127.0.0.1:8820", "address to serve")
 
