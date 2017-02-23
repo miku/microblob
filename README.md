@@ -28,6 +28,13 @@ again, just the offset and lengths of the documents inside a file.
 
 ```
 
+The goal is to serve a large number of keys, while being memory efficient and
+fast to index. Creating a blob database with 120 million entries takes about an
+hour, consumes few GB memory during creation and only a few GB on disk and will
+be served fast from memory, as soon as OS cache parts of the blob file.
+
+It should be possible to use this setup as is for twice or more keys.
+
 Usage
 -----
 
