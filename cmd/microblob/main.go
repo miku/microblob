@@ -374,7 +374,7 @@ func main() {
 	flag.Parse()
 
 	if *blobfile == "" {
-		log.Fatal("need a file to serve")
+		log.Fatal("need a file to index or serve")
 	}
 
 	var backend Backend
