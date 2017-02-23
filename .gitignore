@@ -28,3 +28,10 @@ _testmain.go
 data.db
 /fixtures/example.ldj
 /fixtures/example.map
+
+microblob_.*_amd64.deb
+packaging/deb/microblob/usr
+
+/*.deb
+/*.rpm
+
