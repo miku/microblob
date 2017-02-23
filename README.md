@@ -6,7 +6,7 @@ again, just the offset and lengths of the documents inside a file.
 
 ```
 +--------+       +-----------------------------+
-|request +-------> find offset and lenght      |
+|request +-------> find offset and length      |
 +--------+       | for key in backend [leveldb]|
                  |                             |
 +---------+      +------+----------------------+
