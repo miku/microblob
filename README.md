@@ -50,6 +50,8 @@ file.
 
 It should be possible to use this setup as is for slightly larger settings as well.
 
+Inspiration: [So what's wrong with 1975 programming?](http://varnish-cache.org/docs/trunk/phk/notes.html#so-what-s-wrong-with-1975-programming)
+
 Usage
 -----
 
