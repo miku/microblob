@@ -36,22 +36,24 @@ func main() {
 		log.Fatal("need a file to index or serve")
 	}
 
-	// Choose backend.
 	var backend microblob.Backend
 
 	switch *dbname {
-	default:
-		backend = &microblob.LevelDBBackend{Filename: *dbfile, Blobfile: *blobfile}
 	case "debug":
-		backend = debugBackend{}
+		backend = microblob.DebugBackend{Writer: os.Stdout}
+	default:
+		backend = &microblob.LevelDBBackend{
+			Filename: *dbfile,
+			Blobfile: *blobfile,
+		}
 	}
+
 	defer func() {
 		if err := backend.Close(); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
-	// Serve content.
 	if *serve {
 		http.Handle("/", &microblob.BlobHandler{Backend: backend})
 		log.Printf("serving blobs from %s on %s", *blobfile, *addr)
@@ -60,18 +62,19 @@ func main() {
 		}
 	}
 
-	// Index content.
-	if *pattern == "" && *keypath == "" {
-		log.Fatal("key or pattern required")
-	}
-
 	var extractor microblob.KeyExtractor
 
-	if *pattern != "" {
-		extractor = microblob.RegexpExtractor{Pattern: regexp.MustCompile(*pattern)}
-	}
-	if *keypath != "" {
-		extractor = microblob.ParsingExtractor{Key: *keypath}
+	switch {
+	case *pattern != "":
+		extractor = microblob.RegexpExtractor{
+			Pattern: regexp.MustCompile(*pattern),
+		}
+	case *keypath != "":
+		extractor = microblob.ParsingExtractor{
+			Key: *keypath,
+		}
+	default:
+		log.Fatal("key or pattern required")
 	}
 
 	file, err := os.Open(*blobfile)
