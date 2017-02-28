@@ -4,11 +4,13 @@ import (
 	"expvar"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var (
-	okCounter  *expvar.Int
-	errCounter *expvar.Int
+	okCounter        *expvar.Int
+	errCounter       *expvar.Int
+	lastResponseTime *expvar.Float
 )
 
 // BlobHandler serves blobs.
@@ -18,6 +20,10 @@ type BlobHandler struct {
 
 // ServeHTTP serves HTTP.
 func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	started := time.Now()
+	defer func() {
+		lastResponseTime.Set(time.Since(started).Seconds())
+	}()
 	parts := filterEmpty(strings.Split(r.URL.Path, "/"))
 	if len(parts) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -51,4 +57,5 @@ func filterEmpty(ss []string) (filtered []string) {
 func init() {
 	okCounter = expvar.NewInt("okCounter")
 	errCounter = expvar.NewInt("errCounter")
+	lastResponseTime = expvar.NewFloat("lastResponseTime")
 }
