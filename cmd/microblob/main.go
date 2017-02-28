@@ -14,19 +14,6 @@ import (
 // Version of application.
 const Version = "0.1.5"
 
-// debugBackend just writes the key, value and offsets to standard output.
-type debugBackend struct{}
-
-func (b debugBackend) WriteEntries(entries []microblob.Entry) error {
-	for _, e := range entries {
-		fmt.Printf("%s\t%d\t%d\n", e.Key, e.Offset, e.Length)
-	}
-	return nil
-}
-
-func (b debugBackend) Close() error                   { return nil }
-func (b debugBackend) Get(key string) ([]byte, error) { return []byte{}, nil }
-
 func main() {
 	pattern := flag.String("r", "", "regular expression to use as key extractor")
 	keypath := flag.String("key", "", "key to extract")

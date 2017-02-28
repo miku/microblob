@@ -4,6 +4,7 @@ package microblob
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -24,6 +25,29 @@ type Backend interface {
 	WriteEntries(entries []Entry) error
 	Close() error
 }
+
+// DebugBackend just writes the key, value and offsets to standard output.
+type DebugBackend struct {
+	Writer io.Writer
+}
+
+// WriteEntries write entries as TSV to the given writer.
+func (b DebugBackend) WriteEntries(entries []Entry) error {
+	for _, e := range entries {
+		if _, err := io.WriteString(b.Writer,
+			fmt.Sprintf("%s\t%d\t%d\n", e.Key, e.Offset, e.Length)); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+// Close is a noop.
+func (b DebugBackend) Close() error { return nil }
+
+// Get is a noop, always return nothing.
+func (b DebugBackend) Get(key string) ([]byte, error) { return []byte{}, nil }
 
 // LevelDBBackend writes entries into LevelDB.
 type LevelDBBackend struct {

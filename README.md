@@ -221,3 +221,20 @@ Latency distribution:
   95% in 0.0036 secs
   99% in 0.0068 secs
 ```
+
+Debug backend
+-------------
+
+```shell
+$ ./microblob -backend debug -file fixtures/fake.ldj -key "id" | head -10
+id-0	0	32
+id-1	32	32
+id-2	64	32
+id-3	96	32
+id-4	128	32
+id-5	160	32
+id-6	192	32
+id-7	224	32
+id-8	256	32
+id-9	288	32
+```
