@@ -45,6 +45,7 @@ func NewLineProcessorBatchSize(r io.Reader, w EntryWriter, f KeyFunc, size int) 
 }
 
 // Run starts processing the input, sequential version.
+// TODO(miku): Remove, since this is not used anymore.
 func (p LineProcessor) Run() error {
 	bw := bufio.NewReader(p.r)
 	for {
@@ -59,8 +60,7 @@ func (p LineProcessor) Run() error {
 		if err != nil {
 			return err
 		}
-		entry := Entry{Key: key}
-		if err := p.w([]Entry{entry}); err != nil {
+		if err := p.w([]Entry{Entry{Key: key}}); err != nil {
 			return err
 		}
 	}
@@ -169,30 +169,28 @@ type RegexpExtractor struct {
 	Pattern *regexp.Regexp
 }
 
-// ExtractKey returns the key found in a byte slice.
+// ExtractKey returns the key found in a byte slice. Never fails, just might
+// return unexpected values.
 func (e RegexpExtractor) ExtractKey(b []byte) (string, error) {
 	return string(e.Pattern.Find(b)), nil
 }
 
-// ParsingExtractor parses JSON and extracts the top-level key at the given path.
+// ParsingExtractor actually parses the JSON and extracts a top-level key at the
+// given path. This is slower than for example regular expressions, but not too much.
 type ParsingExtractor struct {
 	Key string
 }
 
-// ExtractKey extracts the key.
-func (e ParsingExtractor) ExtractKey(b []byte) (string, error) {
+// ExtractKey extracts the key. Fails, if key cannot be found in the document.
+func (e ParsingExtractor) ExtractKey(b []byte) (s string, err error) {
 	dst := make(map[string]interface{})
-	if err := json.Unmarshal(b, &dst); err != nil {
-		return "", err
+	if err = json.Unmarshal(b, &dst); err != nil {
+		return
 	}
 	if _, ok := dst[e.Key]; !ok {
 		return "", fmt.Errorf("key %s not found in: %s", e.Key, string(b))
 	}
-	s, err := renderString(dst[e.Key])
-	if err != nil {
-		return "", err
-	}
-	return s, nil
+	return renderString(dst[e.Key])
 }
 
 // renderString tries various ways to get a string out of a given type.
