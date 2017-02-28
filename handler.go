@@ -1,8 +1,14 @@
 package microblob
 
 import (
+	"expvar"
 	"net/http"
 	"strings"
+)
+
+var (
+	okCounter  *expvar.Int
+	errCounter *expvar.Int
 )
 
 // BlobHandler serves blobs.
@@ -16,6 +22,7 @@ func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(parts) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`key is required`))
+		errCounter.Add(1)
 		return
 	}
 	key := strings.TrimSpace(parts[0])
@@ -23,8 +30,10 @@ func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))
+		errCounter.Add(1)
 		return
 	}
+	okCounter.Add(1)
 	w.Write(b)
 }
 
@@ -37,4 +46,9 @@ func filterEmpty(ss []string) (filtered []string) {
 		filtered = append(filtered, s)
 	}
 	return
+}
+
+func init() {
+	okCounter = expvar.NewInt("okCounter")
+	errCounter = expvar.NewInt("errCounter")
 }

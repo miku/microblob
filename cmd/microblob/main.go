@@ -9,6 +9,8 @@ import (
 	"regexp"
 
 	"github.com/miku/microblob"
+
+	_ "expvar"
 )
 
 // Version of application.
