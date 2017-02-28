@@ -16,7 +16,7 @@ const Version = "0.1.5"
 
 func main() {
 	pattern := flag.String("r", "", "regular expression to use as key extractor")
-	keypath := flag.String("key", "", "key to extract")
+	keypath := flag.String("key", "", "key to extract, json, top-level only")
 	dbname := flag.String("backend", "leveldb", "backend to use: leveldb, debug")
 	dbfile := flag.String("db", "data.db", "filename to use for backend")
 	blobfile := flag.String("file", "", "file to index or serve")
