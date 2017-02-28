@@ -99,10 +99,9 @@ func (b *LevelDBBackend) WriteEntries(entries []Entry) error {
 	}
 	batch := new(leveldb.Batch)
 	for _, entry := range entries {
-		offset, length := make([]byte, 8), make([]byte, 8)
-		binary.PutVarint(offset, entry.Offset)
-		binary.PutVarint(length, entry.Length)
-		value := append(offset, length...)
+		value := make([]byte, 16)
+		binary.PutVarint(value[:8], entry.Offset)
+		binary.PutVarint(value[8:], entry.Length)
 		batch.Put([]byte(entry.Key), value)
 	}
 	return b.db.Write(batch, nil)
