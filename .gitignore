@@ -28,6 +28,7 @@ _testmain.go
 data.db
 /fixtures/example.ldj
 /fixtures/example.map
+/fixtures/example.db
 
 microblob_.*_amd64.deb
 packaging/deb/microblob/usr
