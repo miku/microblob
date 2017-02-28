@@ -245,6 +245,7 @@ TODO
 
 * other possible backends: sqlite3, bdb, bolt
 * simple appends
+* stats route
 
 Possible append usage:
 
