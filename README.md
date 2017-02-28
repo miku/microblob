@@ -45,8 +45,9 @@ The input documents must be newline delimited.
 The goal is to serve a large number of keys, while being memory efficient and
 fast to index. Creating a blob database with 120 million entries takes about an
 hour, consumes little memory during preprocessing and only a few GB disk space
-and will be served fast from memory, as soon as the OS caches parts of the blob
-file.
+and will be served fast from memory, as soon as the OS
+[caches](http://www.makelinux.net/books/lkd2/ch15)
+parts of the blob file.
 
 It should be possible to use this setup as is for slightly larger settings as well.
 
@@ -183,7 +184,7 @@ Percentage of the requests served within a certain time (ms)
  100%      3 (longest request)
 ```
 
-Hey!
+[Hey](https://github.com/rakyll/hey)!
 
 ```shell
 $ hey -n 10000 http://localhost:8820/ai-48-R0xJUF9fTmpneU9UTTFPVUJBUURZNE1qa3pOVGs
@@ -238,3 +239,18 @@ id-7	224	32
 id-8	256	32
 id-9	288	32
 ```
+
+TODO
+----
+
+* other possible backends: sqlite3, bdb, bolt
+* simple appends
+
+Possible append usage:
+
+```shell
+$ microblob -db data.db -file example.ldj -append extra.ldj -key "id"
+```
+
+Would append file to a existing file and add keys to existing db. Not possible
+to have multiple processes with leveldb. Take down, append, serve.
