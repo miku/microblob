@@ -3,19 +3,20 @@ package microblob
 import (
 	"expvar"
 	"net/http"
-	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 var (
-	okCounter          *expvar.Int
-	legacyRouteCounter *expvar.Int
-	errCounter         *expvar.Int
-	lastResponseTime   *expvar.Float
+	okCounter        *expvar.Int
+	errCounter       *expvar.Int
+	lastResponseTime *expvar.Float
 )
 
-// WithStats wraps a simple expvar benchmark around a handler.
-func WithStats(h http.Handler) http.Handler {
+// WithLastResponseTime keeps track of the last response time in exported variable
+// lastResponseTime.
+func WithLastResponseTime(h http.Handler) http.Handler {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		started := time.Now()
 		h.ServeHTTP(w, r)
@@ -31,20 +32,21 @@ type BlobHandler struct {
 
 // ServeHTTP serves HTTP.
 func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var key string
-	if r.URL.Path == "/blob" {
-		// Legacy route. TODO(miku): Move to a saner route handling.
-		key = strings.TrimSpace(r.URL.RawQuery)
-		legacyRouteCounter.Add(1)
-	} else {
-		parts := filterEmpty(strings.Split(r.URL.Path, "/"))
-		if len(parts) == 0 {
+	vars := mux.Vars(r)
+	key, ok := vars["key"]
+	if !ok {
+		// From https://tools.ietf.org/html/rfc3986#section-3.4: [...] However, as query
+		// components are often used to carry identifying information in the form of
+		// "key=value" pairs [...]
+		//
+		// Legacy route with the key as value.
+		key = r.URL.RawQuery
+		if key == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(`key is required`))
 			errCounter.Add(1)
 			return
 		}
-		key = strings.TrimSpace(parts[0])
 	}
 	b, err := h.Backend.Get(key)
 	if err != nil {
@@ -57,20 +59,8 @@ func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	okCounter.Add(1)
 }
 
-// filterEmpty removes empty strings from a slice array.
-func filterEmpty(ss []string) (filtered []string) {
-	for _, s := range ss {
-		if strings.TrimSpace(s) == "" {
-			continue
-		}
-		filtered = append(filtered, s)
-	}
-	return
-}
-
 func init() {
 	okCounter = expvar.NewInt("okCounter")
 	errCounter = expvar.NewInt("errCounter")
 	lastResponseTime = expvar.NewFloat("lastResponseTime")
-	legacyRouteCounter = expvar.NewInt("legacyRouteCounter")
 }

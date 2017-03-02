@@ -1,16 +1,20 @@
 package main
 
 import (
+	"encoding/json"
+	_ "expvar"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
 
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"github.com/miku/microblob"
-
-	_ "expvar"
+	"github.com/thoas/stats"
 )
 
 // Version of application.
@@ -26,6 +30,7 @@ func main() {
 	addr := flag.String("addr", "127.0.0.1:8820", "address to serve")
 	batchsize := flag.Int("batch", 100000, "number of lines in a batch")
 	version := flag.Bool("version", false, "show version and exit")
+	logfile := flag.String("log", "", "access log file, stderr if empty")
 
 	flag.Parse()
 
@@ -56,13 +61,37 @@ func main() {
 		}
 	}()
 
+	var loggingWriter io.Writer = os.Stderr
+	if *logfile != "" {
+		file, err := os.OpenFile(*logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+		loggingWriter = file
+	}
+
 	if *serve {
-		var handler http.Handler
-		handler = &microblob.BlobHandler{Backend: backend}
-		handler = microblob.WithStats(handler)
-		http.Handle("/", handler)
-		log.Printf("serving blobs from %s on %s", *blobfile, *addr)
-		if err := http.ListenAndServe(*addr, nil); err != nil {
+		metrics := stats.New()
+		blobHandler := metrics.Handler(
+			microblob.WithLastResponseTime(
+				&microblob.BlobHandler{Backend: backend}))
+
+		r := mux.NewRouter()
+		r.Handle("/debug/vars", http.DefaultServeMux)
+		r.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(metrics.Data()); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+		})
+		r.Handle("/blob", blobHandler)     // Legacy route.
+		r.Handle("/{key:.+}", blobHandler) // Preferred.
+
+		loggedRouter := handlers.LoggingHandler(loggingWriter, r)
+
+		log.Printf("serving blobs from %[1]s on %[2]s, metrics at %[2]s/stats and %[2]s/debug/vars", *blobfile, *addr)
+		if err := http.ListenAndServe(*addr, loggedRouter); err != nil {
 			log.Fatal(err)
 		}
 	}
