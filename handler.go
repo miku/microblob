@@ -13,6 +13,16 @@ var (
 	lastResponseTime *expvar.Float
 )
 
+// WithStats wraps a simple expvar benchmark around a handler.
+func WithStats(h http.Handler) http.Handler {
+	f := func(w http.ResponseWriter, r *http.Request) {
+		started := time.Now()
+		h.ServeHTTP(w, r)
+		lastResponseTime.Set(time.Since(started).Seconds())
+	}
+	return http.HandlerFunc(f)
+}
+
 // BlobHandler serves blobs.
 type BlobHandler struct {
 	Backend Backend
@@ -20,10 +30,6 @@ type BlobHandler struct {
 
 // ServeHTTP serves HTTP.
 func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	started := time.Now()
-	defer func() {
-		lastResponseTime.Set(time.Since(started).Seconds())
-	}()
 	parts := filterEmpty(strings.Split(r.URL.Path, "/"))
 	if len(parts) == 0 {
 		w.WriteHeader(http.StatusBadRequest)

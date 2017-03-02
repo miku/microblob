@@ -57,7 +57,8 @@ func main() {
 	}()
 
 	if *serve {
-		http.Handle("/", &microblob.BlobHandler{Backend: backend})
+		handler := microblob.WithStats(&microblob.BlobHandler{Backend: backend})
+		http.Handle("/", handler)
 		log.Printf("serving blobs from %s on %s", *blobfile, *addr)
 		if err := http.ListenAndServe(*addr, nil); err != nil {
 			log.Fatal(err)
