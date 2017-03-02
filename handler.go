@@ -8,9 +8,10 @@ import (
 )
 
 var (
-	okCounter        *expvar.Int
-	errCounter       *expvar.Int
-	lastResponseTime *expvar.Float
+	okCounter          *expvar.Int
+	legacyRouteCounter *expvar.Int
+	errCounter         *expvar.Int
+	lastResponseTime   *expvar.Float
 )
 
 // WithStats wraps a simple expvar benchmark around a handler.
@@ -30,14 +31,21 @@ type BlobHandler struct {
 
 // ServeHTTP serves HTTP.
 func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	parts := filterEmpty(strings.Split(r.URL.Path, "/"))
-	if len(parts) == 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`key is required`))
-		errCounter.Add(1)
-		return
+	var key string
+	if r.URL.Path == "/blob" {
+		// Legacy route. TODO(miku): Move to a saner route handling.
+		key = strings.TrimSpace(r.URL.RawQuery)
+		legacyRouteCounter.Add(1)
+	} else {
+		parts := filterEmpty(strings.Split(r.URL.Path, "/"))
+		if len(parts) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`key is required`))
+			errCounter.Add(1)
+			return
+		}
+		key = strings.TrimSpace(parts[0])
 	}
-	key := strings.TrimSpace(parts[0])
 	b, err := h.Backend.Get(key)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -64,4 +72,5 @@ func init() {
 	okCounter = expvar.NewInt("okCounter")
 	errCounter = expvar.NewInt("errCounter")
 	lastResponseTime = expvar.NewFloat("lastResponseTime")
+	legacyRouteCounter = expvar.NewInt("legacyRouteCounter")
 }
