@@ -1,6 +1,6 @@
 Summary:    A simple key value store for JSON data.
 Name:       microblob
-Version:    0.1.7
+Version:    0.1.8
 Release:    0
 License:    GPL
 BuildArch:  x86_64
@@ -36,5 +36,9 @@ rm -rf %{_topdir}/BUILD/%{name}
 /usr/local/sbin/microblob
 
 %changelog
-* Thu Feb 23 2016 Martin Czygan
+
+* Fri Mar 3 2017 Martin Czygan
+- 0.1.8 stats, logging, legacy route
+
+* Thu Feb 23 2017 Martin Czygan
 - 0.1.0 initial release
