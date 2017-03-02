@@ -39,8 +39,8 @@ func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		errCounter.Add(1)
 		return
 	}
-	okCounter.Add(1)
 	w.Write(b)
+	okCounter.Add(1)
 }
 
 // filterEmpty removes empty strings from a slice array.
