@@ -16,6 +16,9 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
+// DefaultBucket name.
+var DefaultBucket = "default"
+
 // Entry associates a string key with a section in a file specified by offset and length.
 type Entry struct {
 	Key    string `json:"k"`
@@ -185,7 +188,7 @@ func (b *BoltBackend) WriteEntries(entries []Entry) error {
 		return err
 	}
 	defer tx.Rollback()
-	bucket := tx.Bucket([]byte("default"))
+	bucket := tx.Bucket([]byte(DefaultBucket))
 	for _, entry := range entries {
 		value := make([]byte, 16)
 		binary.PutVarint(value[:8], entry.Offset)
@@ -223,7 +226,7 @@ func (b *BoltBackend) Get(key string) ([]byte, error) {
 	}
 	var blob []byte
 	err := b.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("default"))
+		bucket := tx.Bucket([]byte(DefaultBucket))
 		value := bucket.Get([]byte(key))
 		if value == nil {
 			return fmt.Errorf("boltdb: key not found")
@@ -294,9 +297,9 @@ func (b *BoltBackend) openDatabase() error {
 		return err
 	}
 	defer tx.Rollback()
-	if _, err := tx.CreateBucketIfNotExists([]byte("default")); err != nil {
+	if _, err := tx.CreateBucketIfNotExists([]byte(DefaultBucket)); err != nil {
 		return err
 	}
-	log.Println("boltdb: created bucket: default")
+	log.Printf("boltdb: created bucket: %s", DefaultBucket)
 	return tx.Commit()
 }
