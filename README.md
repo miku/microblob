@@ -2,9 +2,13 @@ microblob
 =========
 
 Serve documents of a newline delimited (JSON) file via HTTP. Do not store the
-contents, just the offsets and lengths of the documents.
+contents, just the offsets and lengths of the documents. The input documents
+must be newline delimited.
 
-The input documents must be newline delimited.
+**Status**: Currently in development, API and flags might change. Use at your own risk.
+
+Sketch
+------
 
 ```
                     Index a file into a database. Specify JSON key or regular expression (faster).
