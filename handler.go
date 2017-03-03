@@ -34,7 +34,7 @@ type BlobHandler struct {
 func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key, ok := vars["key"]
-	if !ok {
+	if !ok || key == "blob/" {
 		// From https://tools.ietf.org/html/rfc3986#section-3.4: [...] However, as query
 		// components are often used to carry identifying information in the form of
 		// "key=value" pairs [...]
