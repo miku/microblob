@@ -18,7 +18,7 @@ import (
 )
 
 // Version of application.
-const Version = "0.1.8"
+const Version = "0.1.9"
 
 func main() {
 	pattern := flag.String("r", "", "regular expression to use as key extractor")
