@@ -174,9 +174,8 @@ type BoltBackend struct {
 	Filename string
 	db       *bolt.DB
 	sync.Mutex
+	counter int64
 }
-
-var counter int64
 
 // WriteEntries persists a batch of entries.
 func (b *BoltBackend) WriteEntries(entries []Entry) error {
@@ -197,8 +196,8 @@ func (b *BoltBackend) WriteEntries(entries []Entry) error {
 			return err
 		}
 	}
-	atomic.AddInt64(&counter, int64(len(entries)))
-	log.Printf("boltdb: @%d", atomic.LoadInt64(&counter))
+	atomic.AddInt64(&b.counter, int64(len(entries)))
+	log.Printf("boltdb: @%d", atomic.LoadInt64(&b.counter))
 	return tx.Commit()
 }
 
