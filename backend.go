@@ -6,8 +6,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"sync"
+	"sync/atomic"
 
 	"github.com/boltdb/bolt"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -170,6 +172,8 @@ type BoltBackend struct {
 	sync.Mutex
 }
 
+var counter int64
+
 // WriteEntries persists a batch of entries.
 func (b *BoltBackend) WriteEntries(entries []Entry) error {
 	if err := b.openDatabase(); err != nil {
@@ -189,6 +193,8 @@ func (b *BoltBackend) WriteEntries(entries []Entry) error {
 			return err
 		}
 	}
+	atomic.AddInt64(&counter, int64(len(entries)))
+	log.Printf("@%d", atomic.LoadInt64(&counter))
 	return tx.Commit()
 }
 
