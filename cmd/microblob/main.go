@@ -48,6 +48,11 @@ func main() {
 	switch *dbname {
 	case "debug":
 		backend = microblob.DebugBackend{Writer: os.Stdout}
+	case "bolt":
+		backend = &microblob.BoltBackend{
+			Filename: *dbfile,
+			Blobfile: *blobfile,
+		}
 	default:
 		backend = &microblob.LevelDBBackend{
 			Filename: *dbfile,
