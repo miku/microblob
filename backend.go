@@ -10,6 +10,7 @@ import (
 	"os"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -194,7 +195,7 @@ func (b *BoltBackend) WriteEntries(entries []Entry) error {
 		}
 	}
 	atomic.AddInt64(&counter, int64(len(entries)))
-	log.Printf("@%d", atomic.LoadInt64(&counter))
+	log.Printf("boltdb: @%d", atomic.LoadInt64(&counter))
 	return tx.Commit()
 }
 
@@ -204,12 +205,14 @@ func (b *BoltBackend) Close() error {
 		if err := b.db.Close(); err != nil {
 			return err
 		}
+		log.Println("boltdb: closed db")
 	}
 	if b.blob != nil {
 		if err := b.blob.Close(); err != nil {
 			return err
 		}
 	}
+	log.Println("boltdb: closed file")
 	return nil
 }
 
@@ -223,7 +226,7 @@ func (b *BoltBackend) Get(key string) ([]byte, error) {
 		bucket := tx.Bucket([]byte("default"))
 		value := bucket.Get([]byte(key))
 		if value == nil {
-			return nil
+			return fmt.Errorf("boltdb: key not found")
 		}
 
 		obuf := bytes.NewBuffer(value[:8])
@@ -278,10 +281,11 @@ func (b *BoltBackend) openDatabase() error {
 	if b.db != nil {
 		return nil
 	}
-	db, err := bolt.Open(b.Filename, 0600, nil)
+	db, err := bolt.Open(b.Filename, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return err
 	}
+	log.Printf("boltdb: opened database at: %s", b.Filename)
 	b.db = db
 
 	// Create a bucket, if it does not exist.
@@ -293,5 +297,6 @@ func (b *BoltBackend) openDatabase() error {
 	if _, err := tx.CreateBucketIfNotExists([]byte("default")); err != nil {
 		return err
 	}
+	log.Println("boltdb: created bucket: default")
 	return tx.Commit()
 }
