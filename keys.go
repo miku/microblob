@@ -25,10 +25,11 @@ type EntryWriter func(entries []Entry) error
 
 // LineProcessor reads a line, extracts the key and writes entries.
 type LineProcessor struct {
-	r         io.Reader   // input data
-	f         KeyFunc     // extracts a string key from a byte blob
-	w         EntryWriter // serializes entries
-	BatchSize int         // number of lines in a batch
+	r             io.Reader   // input data
+	f             KeyFunc     // extracts a string key from a byte blob
+	w             EntryWriter // serializes entries
+	BatchSize     int         // number of lines in a batch
+	InitialOffset int64       // allow offsets beside zero
 }
 
 // NewLineProcessor reads lines from the given reader, extracts the key with the
@@ -130,7 +131,8 @@ func (p LineProcessor) RunWithWorkers() error {
 	go collector(updates, done)
 
 	br := bufio.NewReader(p.r)
-	var offset, blen int64
+	var offset = p.InitialOffset
+	var blen int64
 	batch := [][]byte{}
 
 	for {

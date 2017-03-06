@@ -31,6 +31,7 @@ func main() {
 	batchsize := flag.Int("batch", 100000, "number of lines in a batch")
 	version := flag.Bool("version", false, "show version and exit")
 	logfile := flag.String("log", "", "access log file, stderr if empty")
+	appendfile := flag.String("append", "", "append this file to existing file and index into existing database")
 
 	flag.Parse()
 
@@ -111,11 +112,34 @@ func main() {
 		log.Fatal("key or pattern required")
 	}
 
-	file, err := os.Open(*blobfile)
+	file, err := os.OpenFile(*blobfile, os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
+
+	var initialOffset int64
+
+	if *appendfile != "" {
+		end, err := file.Seek(0, io.SeekEnd)
+		if err != nil {
+			log.Fatal(err)
+		}
+		initialOffset = end
+
+		f, err := os.Open(*appendfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+
+		if _, err := io.Copy(file, f); err != nil {
+			log.Fatal(err)
+		}
+		if _, err := file.Seek(initialOffset, io.SeekStart); err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	processor := microblob.NewLineProcessorBatchSize(
 		file,
@@ -123,6 +147,8 @@ func main() {
 		extractor.ExtractKey,
 		*batchsize,
 	)
+	processor.InitialOffset = initialOffset
+
 	if err := processor.RunWithWorkers(); err != nil {
 		log.Fatal(err)
 	}
