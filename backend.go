@@ -6,18 +6,11 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"sync"
-	"sync/atomic"
-	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/syndtr/goleveldb/leveldb"
 )
-
-// DefaultBucket name.
-var DefaultBucket = "default"
 
 // Entry associates a string key with a section in a file specified by offset and length.
 type Entry struct {
@@ -165,140 +158,4 @@ func (b *LevelDBBackend) openDatabase() error {
 	}
 	b.db = db
 	return nil
-}
-
-// BoltBackend uses BoltDB.
-type BoltBackend struct {
-	Blobfile string
-	blob     *os.File
-	Filename string
-	db       *bolt.DB
-	sync.Mutex
-	counter int64
-}
-
-// WriteEntries persists a batch of entries.
-func (b *BoltBackend) WriteEntries(entries []Entry) error {
-	if err := b.openDatabase(); err != nil {
-		return err
-	}
-	tx, err := b.db.Begin(true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	bucket := tx.Bucket([]byte(DefaultBucket))
-	for _, entry := range entries {
-		value := make([]byte, 16)
-		binary.PutVarint(value[:8], entry.Offset)
-		binary.PutVarint(value[8:], entry.Length)
-		if err := bucket.Put([]byte(entry.Key), value); err != nil {
-			return err
-		}
-	}
-	atomic.AddInt64(&b.counter, int64(len(entries)))
-	log.Printf("boltdb: @%d", atomic.LoadInt64(&b.counter))
-	return tx.Commit()
-}
-
-// Close closes file and database.
-func (b *BoltBackend) Close() error {
-	if b.db != nil {
-		if err := b.db.Close(); err != nil {
-			return err
-		}
-		log.Println("boltdb: closed db")
-	}
-	if b.blob != nil {
-		if err := b.blob.Close(); err != nil {
-			return err
-		}
-	}
-	log.Println("boltdb: closed file")
-	return nil
-}
-
-// Get retrieves the blob for a key.
-func (b *BoltBackend) Get(key string) ([]byte, error) {
-	if err := b.openDatabase(); err != nil {
-		return nil, err
-	}
-	var blob []byte
-	err := b.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte(DefaultBucket))
-		value := bucket.Get([]byte(key))
-		if value == nil {
-			return fmt.Errorf("boltdb: key not found")
-		}
-
-		obuf := bytes.NewBuffer(value[:8])
-		lbuf := bytes.NewBuffer(value[8:])
-
-		offset, err := binary.ReadVarint(obuf)
-		if err != nil {
-			return err
-		}
-
-		length, err := binary.ReadVarint(lbuf)
-		if err != nil {
-			return err
-		}
-
-		if err := b.openBlob(); err != nil {
-			return err
-		}
-
-		b.Lock()
-		defer b.Unlock()
-		if _, err := b.blob.Seek(offset, io.SeekStart); err != nil {
-			return err
-		}
-		blob = make([]byte, length)
-		if _, err := b.blob.Read(blob); err != nil {
-			return err
-		}
-		return nil
-	})
-	return blob, err
-}
-
-// openBlob opens the raw file. Save to call many times.
-func (b *BoltBackend) openBlob() error {
-	// TODO(miku): Store a SHA of the origin file in the blob store, compare with the
-	// SHA of the currently used blob file, so we can warn the user if database and
-	// file won't match.
-	if b.blob != nil {
-		return nil
-	}
-	file, err := os.Open(b.Blobfile)
-	if err != nil {
-		return err
-	}
-	b.blob = file
-	return nil
-}
-
-// openDatabase creates a LevelDB handle. Save to call many times.
-func (b *BoltBackend) openDatabase() error {
-	if b.db != nil {
-		return nil
-	}
-	db, err := bolt.Open(b.Filename, 0600, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		return err
-	}
-	log.Printf("boltdb: opened database at: %s", b.Filename)
-	b.db = db
-
-	// Create a bucket, if it does not exist.
-	tx, err := b.db.Begin(true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	if _, err := tx.CreateBucketIfNotExists([]byte(DefaultBucket)); err != nil {
-		return err
-	}
-	log.Printf("boltdb: created bucket: %s", DefaultBucket)
-	return tx.Commit()
 }
