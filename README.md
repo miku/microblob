@@ -5,7 +5,7 @@ Serve documents of a newline delimited (JSON) file via HTTP. Do not store the
 contents, just the offsets and lengths of the documents. The input documents
 must be newline delimited.
 
-**Status**: Currently in development, API and flags might change. Use at your own risk.
+**Status**: Currently in beta testing, API and flags might change. Use at your own risk.
 
 Sketch
 ------
@@ -64,25 +64,28 @@ Usage
 $ microblob -h
 Usage of microblob:
   -addr string
-      address to serve (default "127.0.0.1:8820")
+        address to serve (default "127.0.0.1:8820")
+  -append string
+        append this file to existing file and index into existing database
   -backend string
-      backend to use: leveldb, debug (default "leveldb")
+        backend to use: leveldb, debug (default "leveldb")
   -batch int
-      number of lines in a batch (default 100000)
+        number of lines in a batch (default 100000)
   -db string
-      filename to use for backend (default "data.db")
+        filename to use for backend (default "data.db")
   -file string
-      file to index or serve
+        file to index or serve
   -key string
-      key to extract, json, top-level only
+        key to extract, json, top-level only
   -log string
-      access log file, stderr if empty
+        access log file, stderr if empty
   -r string
-      regular expression to use as key extractor
+        regular expression to use as key extractor
   -serve
-      serve file
+        serve file
   -version
-      show version and exit
+        show version and exit
+
 ```
 
 ```shell
@@ -251,8 +254,8 @@ TODO
 
 - [x] stats route (middleware)
 - [x] logging (middleware)
-- [ ] other possible backends: sqlite3, bdb, bolt
-- [ ] simple appends
+- [x] simple appends
+- [x] other possible backends: sqlite3, bdb, bolt; bolt hung at 113M records; debug later
 
 Possible append usage:
 
