@@ -26,7 +26,7 @@ type Backend interface {
 	Close() error
 }
 
-// DebugBackend just writes the key, value and offsets to standard output.
+// DebugBackend just writes the key, value and offsets to a given writer.
 type DebugBackend struct {
 	Writer io.Writer
 }
