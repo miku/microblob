@@ -63,12 +63,11 @@ type LevelDBBackend struct {
 }
 
 // Get retrieves the data for a given key.
-func (b *LevelDBBackend) Get(key string) ([]byte, error) {
-	if err := b.openDatabase(); err != nil {
+func (b *LevelDBBackend) Get(key string) (data []byte, err error) {
+	if err = b.openDatabase(); err != nil {
 		return nil, err
 	}
 
-	var err error
 	var value []byte
 	var offset, length int64
 
@@ -85,18 +84,19 @@ func (b *LevelDBBackend) Get(key string) ([]byte, error) {
 		return nil, err
 	}
 
-	if err := b.openBlob(); err != nil {
+	if err = b.openBlob(); err != nil {
 		return nil, err
 	}
+
+	data = make([]byte, length)
 
 	b.Lock()
 	defer b.Unlock()
 
-	if _, err := b.blob.Seek(offset, io.SeekStart); err != nil {
+	if _, err = b.blob.Seek(offset, io.SeekStart); err != nil {
 		return nil, err
 	}
-	data := make([]byte, length)
-	if _, err := b.blob.Read(data); err != nil {
+	if _, err = b.blob.Read(data); err != nil {
 		return nil, err
 	}
 	return data, nil
