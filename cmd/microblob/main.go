@@ -60,12 +60,14 @@ func main() {
 	}()
 
 	var loggingWriter io.Writer = os.Stderr
+
 	if *logfile != "" {
 		file, err := os.OpenFile(*logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
 		loggingWriter = file
+		defer file.Close()
 	}
 
 	if *serve {
