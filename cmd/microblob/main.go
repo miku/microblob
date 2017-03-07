@@ -141,12 +141,8 @@ func main() {
 		}
 	}
 
-	processor := microblob.NewLineProcessorBatchSize(
-		file,
-		backend.WriteEntries,
-		extractor.ExtractKey,
-		*batchsize,
-	)
+	processor := microblob.NewLineProcessor(file, backend.WriteEntries, extractor.ExtractKey)
+	processor.BatchSize = *batchsize
 	processor.InitialOffset = initialOffset
 
 	if err := processor.RunWithWorkers(); err != nil {
