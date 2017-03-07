@@ -82,9 +82,9 @@ func (b *LevelDBBackend) Get(key string) ([]byte, error) {
 		return nil, err
 	}
 
-	// Retrieve content.
 	b.Lock()
 	defer b.Unlock()
+
 	if _, err := b.blob.Seek(offset, io.SeekStart); err != nil {
 		return nil, err
 	}
