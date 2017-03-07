@@ -32,6 +32,7 @@ type BlobHandler struct {
 
 // ServeHTTP serves HTTP.
 func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Blob", Version)
 	vars := mux.Vars(r)
 	key, ok := vars["key"]
 	if !ok || key == "blob/" {

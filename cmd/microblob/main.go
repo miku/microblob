@@ -17,9 +17,6 @@ import (
 	"github.com/thoas/stats"
 )
 
-// Version of application.
-const Version = "0.1.11"
-
 func main() {
 	pattern := flag.String("r", "", "regular expression to use as key extractor")
 	keypath := flag.String("key", "", "key to extract, json, top-level only")
@@ -36,7 +33,7 @@ func main() {
 	flag.Parse()
 
 	if *version {
-		fmt.Println(Version)
+		fmt.Println(microblob.Version)
 		os.Exit(0)
 	}
 
