@@ -38,11 +38,10 @@ type DebugBackend struct {
 // WriteEntries write entries as TSV to the given writer.
 func (b DebugBackend) WriteEntries(entries []Entry) error {
 	for _, e := range entries {
-		if _, err := io.WriteString(b.Writer,
-			fmt.Sprintf("%s\t%d\t%d\n", e.Key, e.Offset, e.Length)); err != nil {
+		s := fmt.Sprintf("%s\t%d\t%d\n", e.Key, e.Offset, e.Length)
+		if _, err := io.WriteString(b.Writer, s); err != nil {
 			return err
 		}
-
 	}
 	return nil
 }
