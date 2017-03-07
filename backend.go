@@ -64,21 +64,17 @@ func (b *LevelDBBackend) Get(key string) ([]byte, error) {
 		return nil, err
 	}
 
-	value, err := b.db.Get([]byte(key), nil)
-	if err != nil {
+	var err error
+	var value []byte
+	var offset, length int64
+
+	if value, err = b.db.Get([]byte(key), nil); err != nil {
 		return nil, err
 	}
-
-	obuf := bytes.NewBuffer(value[:8])
-	lbuf := bytes.NewBuffer(value[8:])
-
-	offset, err := binary.ReadVarint(obuf)
-	if err != nil {
+	if offset, err = binary.ReadVarint(bytes.NewBuffer(value[:8])); err != nil {
 		return nil, err
 	}
-
-	length, err := binary.ReadVarint(lbuf)
-	if err != nil {
+	if length, err = binary.ReadVarint(bytes.NewBuffer(value[8:])); err != nil {
 		return nil, err
 	}
 
