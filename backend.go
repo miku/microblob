@@ -105,11 +105,13 @@ func (b *LevelDBBackend) Close() error {
 		if err := b.db.Close(); err != nil {
 			return err
 		}
+		b.db = nil
 	}
 	if b.blob != nil {
 		if err := b.blob.Close(); err != nil {
 			return err
 		}
+		b.blob = nil
 	}
 	return nil
 }
