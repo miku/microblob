@@ -4,6 +4,7 @@ package microblob
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,6 +12,9 @@ import (
 
 	"github.com/syndtr/goleveldb/leveldb"
 )
+
+// ErrInvalidValue if a value is corrupted.
+var ErrInvalidValue = errors.New("invalid entry")
 
 // Entry associates a string key with a section in a file specified by offset and length.
 type Entry struct {
@@ -70,6 +74,9 @@ func (b *LevelDBBackend) Get(key string) ([]byte, error) {
 
 	if value, err = b.db.Get([]byte(key), nil); err != nil {
 		return nil, err
+	}
+	if len(value) < 16 {
+		return nil, ErrInvalidValue
 	}
 	if offset, err = binary.ReadVarint(bytes.NewBuffer(value[:8])); err != nil {
 		return nil, err
