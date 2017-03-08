@@ -1,14 +1,37 @@
 microblob
 =========
 
-Serve documents of a newline delimited (JSON) file via HTTP. Do not store the
-contents, just the offsets and lengths of the documents. The input documents
-must be newline delimited.
+microblob is a key-value store that serves documents from a file over HTTP.
 
-**Status**: Currently in beta testing, API and flags might change. Use at your own risk.
+We encountered some problems with [memcachedb](http://memcachedb.org/), which
+is a great solution, nonetheless. We used
+[memcldj](https://github.com/miku/memcldj) to insert data into memcachedb in
+bulk. Approaching 100 million documents (0.5-10k each), memcachedb inserts
+would slow down significantly.
+
+*Requirements*
+
+* Fast to rebuild from scratch.
+* Fast to insert additional documents, independent of current size.
+* Low memory footprint during bulk inserts.
+* Scale up *and down* with RAM. It should be usable on a small spec
+machine, but use lots of RAM, if available.
+* Serve 100s of millions of documents.
+
+*Tradeoffs*
+
+* Average response time should not exceed 20ms per key, but frequent outliers are ok.
+* It's ok to run on a single machine only.
 
 Sketch
 ------
+
+Instead of actually inserting document into a key-value store, we use a single
+file, which contains all the documents (one per line) and create a map of the
+regions in the file, that represent the document to be served. This map is kept
+in a real key-value store (like leveldb).
+
+**Status**: Currently in production testing, API and flags might change.
 
 ```
                     Index a file into a database. Specify JSON key or regular expression (faster).
@@ -154,7 +177,6 @@ Completed 8000 requests
 Completed 9000 requests
 Completed 10000 requests
 Finished 10000 requests
-
 
 Server Software:
 Server Hostname:        127.0.0.1
