@@ -3,20 +3,19 @@ microblob
 
 microblob is a key-value store that serves documents from a file over HTTP.
 
-We encountered some problems with [memcachedb](http://memcachedb.org/), which
-is a great solution, nonetheless. We used
-[memcldj](https://github.com/miku/memcldj) to insert data into memcachedb in
-bulk. Approaching 100 million documents (0.5-10k each), memcachedb inserts
-would slow down significantly.
+Previously, we used [memcachedb](http://memcachedb.org/), which is a great
+solution. With [memcldj](https://github.com/miku/memcldj) it was simple to
+insert data into memcachedb in bulk. However, approaching 100 million documents
+each between 500b and 20000b in size, memcachedb inserts would slow down
+considerably.
 
 *Requirements*
 
-* Fast to rebuild from scratch.
+* Fast to rebuild from scratch, from a single file.
 * Fast to insert additional documents, independent of current size.
-* Low memory footprint during bulk inserts.
-* Scale up *and down* with RAM. It should be usable on a small spec
-machine, but use lots of RAM, if available.
-* Serve 100s of millions of documents.
+* Low memory footprint during inserts.
+* Scale up *and down* with RAM. It should be usable on a small spec machine, but use utilize memory, if available.
+* Serve 100 million or more documents.
 
 *Tradeoffs*
 
@@ -28,8 +27,36 @@ Sketch
 
 Instead of actually inserting document into a key-value store, we use a single
 file, which contains all the documents (one per line) and create a map of the
-regions in the file, that represent the document to be served. This map is kept
-in a real key-value store (like leveldb).
+regions in the file, that represent the documents to be served. This map is
+kept in a real key-value store (like leveldb). Data is served in two steps:
+first the region for a key is looked up in a key value store. Second, the
+region is read and returned via HTTP. This scales up and down. With a simple:
+
+```shell
+$ cat blobfile > /dev/null
+```
+
+one can try to move as much of the file to serve into the page cache. You can
+check the page cache stats with tools like
+[pcstat](https://github.com/tobert/pcstat). Here is an example output for a
+machine with about 100G of main memory:
+
+With about 60% cached, response times average around 15ms.
+
+```shell
+$ pcstat /var/microblob/blobfile-2017-02-27.ldj
++----------------------------------------+----------------+------------+-----------+---------+
+| Name                                   | Size (bytes)   | Pages      | Cached    | Percent |
+|----------------------------------------+----------------+------------+-----------+---------|
+| /var/microblob/blobfile-2017-02-27.ldj | 127434504469   | 31111940   | 30500721  | 098.035 |
++----------------------------------------+----------------+------------+-----------+---------+
+```
+
+When priming the page cache to about 98% average response times can be as low
+as 4ms at 200 requests per second. Requests for a single key can be served in
+about 6ms with a sustained rate over 30000 requests per second.
+
+----
 
 **Status**: Currently in production testing, API and flags might change.
 
