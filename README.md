@@ -14,7 +14,7 @@ considerably.
 * Fast to rebuild from scratch, from a single file.
 * Fast to insert additional documents, independent of current size.
 * Low memory footprint during inserts.
-* Scale up *and down* with RAM. It should be usable on a small spec machine, but use utilize memory, if available.
+* Scale up *and down* with RAM. It should be usable on a small spec machine, but utilize memory, if available.
 * Serve 100 million or more documents.
 
 *Tradeoffs*
@@ -304,6 +304,9 @@ TODO
 - [ ] allow per record compressed files as blobfile (e.g. gzip, zstd, ...),
   maybe add a small preprocessing tool (linecompress), would about double amount
   of cacheable data (e.g. maybe 230G in 128G)
+- [ ] better command line ui, maybe with subcommands like: microblob [add | serve] -db x.db -file x.ldj
+- [ ] allow appends while server is running
+- [ ] use HTTP for additions, [uploads](https://curl.haxx.se/docs/manpage.html#-T): curl http://localhost:8820 --upload-file x.ldj
 - [x] stats route (middleware)
 - [x] logging (middleware)
 - [x] simple appends
