@@ -301,6 +301,9 @@ id-9	288	32
 TODO
 ----
 
+- [ ] allow per record compressed files as blobfile (e.g. gzip, zstd, ...),
+  maybe add a small preprocessing tool (linecompress), would about double amount
+  of cacheable data (e.g. maybe 230G in 128G)
 - [x] stats route (middleware)
 - [x] logging (middleware)
 - [x] simple appends
