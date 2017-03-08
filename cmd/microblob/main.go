@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -27,7 +28,7 @@ func main() {
 	addr := flag.String("addr", "127.0.0.1:8820", "address to serve")
 	batchsize := flag.Int("batch", 100000, "number of lines in a batch")
 	version := flag.Bool("version", false, "show version and exit")
-	logfile := flag.String("log", "", "access log file, stderr if empty")
+	logfile := flag.String("log", "", "access log file, don't log if empty")
 	appendfile := flag.String("append", "", "append this file to existing file and index into existing database")
 
 	flag.Parse()
@@ -59,7 +60,7 @@ func main() {
 		}
 	}()
 
-	var loggingWriter io.Writer = os.Stderr
+	var loggingWriter = ioutil.Discard
 
 	if *logfile != "" {
 		file, err := os.OpenFile(*logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
