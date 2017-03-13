@@ -8,25 +8,7 @@ import (
 	"syscall"
 )
 
-// Get retrieves the data for a given key.
-// Raw timings of the operations:
-// Cold:
-//     time.Now(): 89ns
-//     b.openDatabase(): 2.692719ms
-//     b.db.Get: 5.441917ms
-//     binary.ReadVarint: 5.456746ms
-//     make([]byte, length): 5.473913ms
-//     b.blob.Seek: 5.479361ms
-//     b.blob.Read: 5.487422ms
-// Warm:
-//     time.Now(): 57ns
-//     b.openDatabase(): 86.018µs
-//     b.db.Get: 139.769µs
-//     binary.ReadVarint: 155.258µs
-//     make([]byte, length): 210.089µs
-//     b.blob.Seek: 218.031µs
-//     b.blob.Read: 252.66µs
-//
+// Get retrieves the data for a given key, using pread(2).
 func (b *LevelDBBackend) Get(key string) (data []byte, err error) {
 	if err = b.openDatabase(); err != nil {
 		return nil, err
