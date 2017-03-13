@@ -1,4 +1,4 @@
 package microblob
 
 // Version of application.
-const Version = "0.1.12"
+const Version = "0.1.13"
