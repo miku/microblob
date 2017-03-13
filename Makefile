@@ -7,7 +7,7 @@ all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
 	go get -v ./...
-	go build -o $@ $<
+	go build -v -o $@ $<
 
 clean:
 	rm -f $(TARGETS)
