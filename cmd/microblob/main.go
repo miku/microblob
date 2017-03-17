@@ -138,13 +138,13 @@ func main() {
 
 	switch {
 	case *pattern != "":
-		extractor = microblob.RegexpExtractor{
-			Pattern: regexp.MustCompile(*pattern),
+		p, err := regexp.Compile(*pattern)
+		if err != nil {
+			log.Fatal(err)
 		}
+		extractor = microblob.RegexpExtractor{Pattern: p}
 	case *keypath != "":
-		extractor = microblob.ParsingExtractor{
-			Key: *keypath,
-		}
+		extractor = microblob.ParsingExtractor{Key: *keypath}
 	default:
 		log.Fatal("key or pattern required")
 	}
