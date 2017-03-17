@@ -7,12 +7,12 @@ import (
 )
 
 // Append add a file to an existing blob file and adds their keys to the store. Not thread safe.
-func Append(blobfn, fn string, backend Backend, ke KeyFunc) error {
-	return AppendBatchSize(blobfn, fn, backend, ke, 100000)
+func Append(blobfn, fn string, backend Backend, kf KeyFunc) error {
+	return AppendBatchSize(blobfn, fn, backend, kf, 100000)
 }
 
 // AppendBatchSize uses a given batch size.
-func AppendBatchSize(blobfn, fn string, backend Backend, ke KeyFunc, size int) (err error) {
+func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int) (err error) {
 	file, err := os.OpenFile(blobfn, os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -41,7 +41,7 @@ func AppendBatchSize(blobfn, fn string, backend Backend, ke KeyFunc, size int) (
 		}
 	}
 
-	processor := NewLineProcessor(file, backend.WriteEntries, ke)
+	processor := NewLineProcessor(file, backend.WriteEntries, kf)
 	processor.BatchSize = size
 	processor.InitialOffset = offset
 
