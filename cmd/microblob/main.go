@@ -99,7 +99,7 @@ func main() {
 			key := r.URL.Query().Get("key")
 			if key == "" {
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte("update requires key query parameter"))
+				w.Write([]byte("update: key query parameter required"))
 				return
 			}
 			extractor := microblob.ParsingExtractor{Key: key}
