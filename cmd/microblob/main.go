@@ -11,12 +11,16 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"sync"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/miku/microblob"
 	"github.com/thoas/stats"
 )
+
+// mu protects updates.
+var mu sync.Mutex
 
 func main() {
 	pattern := flag.String("r", "", "regular expression to use as key extractor")
@@ -102,7 +106,30 @@ func main() {
 				w.Write([]byte("update requires key query parameter"))
 				return
 			}
-			w.Write([]byte("not yet implemented"))
+			extractor := microblob.ParsingExtractor{Key: key}
+			f, err := ioutil.TempFile("", "microblob-")
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(err.Error()))
+				return
+			}
+			if _, err := io.Copy(f, r.Body); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("temporary copy failed: " + err.Error()))
+				return
+			}
+			defer r.Body.Close()
+			defer os.Remove(f.Name())
+			log.Printf("indexing temporary file at " + f.Name())
+			mu.Lock()
+			defer mu.Unlock()
+			if err := microblob.Append(*blobfile, f.Name(), backend, extractor.ExtractKey); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte("append: " + err.Error()))
+				return
+			}
+			log.Printf("appended %d from %s to %s", r.ContentLength, r.RemoteAddr, *blobfile)
+			return
 		})
 		r.Handle("/blob", blobHandler)     // Legacy route.
 		r.Handle("/{key:.+}", blobHandler) // Preferred.
@@ -130,40 +157,9 @@ func main() {
 		log.Fatal("key or pattern required")
 	}
 
-	file, err := os.OpenFile(*blobfile, os.O_APPEND|os.O_RDWR, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	var initialOffset int64
-
-	if *appendfile != "" {
-		end, err := file.Seek(0, io.SeekEnd)
-		if err != nil {
-			log.Fatal(err)
-		}
-		initialOffset = end
-
-		f, err := os.Open(*appendfile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer f.Close()
-
-		if _, err := io.Copy(file, f); err != nil {
-			log.Fatal(err)
-		}
-		if _, err := file.Seek(initialOffset, io.SeekStart); err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	processor := microblob.NewLineProcessor(file, backend.WriteEntries, extractor.ExtractKey)
-	processor.BatchSize = *batchsize
-	processor.InitialOffset = initialOffset
-
-	if err := processor.RunWithWorkers(); err != nil {
+	mu.Lock()
+	defer mu.Unlock()
+	if err := microblob.AppendBatchSize(*blobfile, *appendfile, backend, extractor.ExtractKey, *batchsize); err != nil {
 		log.Fatal(err)
 	}
 }
