@@ -116,13 +116,11 @@ func main() {
 			}
 			defer r.Body.Close()
 			defer os.Remove(f.Name())
-			log.Printf("indexing temporary file at " + f.Name())
 			if err := microblob.Append(*blobfile, f.Name(), backend, extractor.ExtractKey); err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Write([]byte("append: " + err.Error()))
 				return
 			}
-			log.Printf("appended %d from %s to %s", r.ContentLength, r.RemoteAddr, *blobfile)
 			return
 		})
 		r.Handle("/blob", blobHandler)     // Legacy route.
