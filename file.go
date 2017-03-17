@@ -4,7 +4,11 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 )
+
+// mu protects updates.
+var mu sync.Mutex
 
 // Append add a file to an existing blob file and adds their keys to the store. Not thread safe.
 func Append(blobfn, fn string, backend Backend, kf KeyFunc) error {
@@ -13,6 +17,8 @@ func Append(blobfn, fn string, backend Backend, kf KeyFunc) error {
 
 // AppendBatchSize uses a given batch size.
 func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int) (err error) {
+	mu.Lock()
+	defer mu.Unlock()
 	file, err := os.OpenFile(blobfn, os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
 		log.Fatal(err)

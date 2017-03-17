@@ -11,16 +11,12 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"sync"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/miku/microblob"
 	"github.com/thoas/stats"
 )
-
-// mu protects updates.
-var mu sync.Mutex
 
 func main() {
 	pattern := flag.String("r", "", "regular expression to use as key extractor")
@@ -121,8 +117,6 @@ func main() {
 			defer r.Body.Close()
 			defer os.Remove(f.Name())
 			log.Printf("indexing temporary file at " + f.Name())
-			mu.Lock()
-			defer mu.Unlock()
 			if err := microblob.Append(*blobfile, f.Name(), backend, extractor.ExtractKey); err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Write([]byte("append: " + err.Error()))
@@ -157,8 +151,6 @@ func main() {
 		log.Fatal("key or pattern required")
 	}
 
-	mu.Lock()
-	defer mu.Unlock()
 	if err := microblob.AppendBatchSize(*blobfile, *appendfile, backend, extractor.ExtractKey, *batchsize); err != nil {
 		log.Fatal(err)
 	}
