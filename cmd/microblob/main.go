@@ -88,7 +88,12 @@ func main() {
 		})
 		r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			io.WriteString(w, fmt.Sprintf(`{"name": "microblob", "version": "%[1]s", "stats": "http://%[2]s/stats", "vars": "http://%[2]s/debug/vars"}`, microblob.Version, r.Host))
+			json.NewEncoder(w).Encode(map[string]string{
+				"name":    "microblob",
+				"version": microblob.Version,
+				"stats":   fmt.Sprintf("http://%s/stats", r.Host),
+				"vars":    fmt.Sprintf("http://%s/debug/vars", r.Host),
+			})
 		})
 		r.Handle("/blob", blobHandler)     // Legacy route.
 		r.Handle("/{key:.+}", blobHandler) // Preferred.
