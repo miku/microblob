@@ -2,7 +2,10 @@ package microblob
 
 import (
 	"expvar"
+	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -58,6 +61,46 @@ func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(b)
 	okCounter.Add(1)
+}
+
+// UpdateHandler adds more data to the blob server.
+type UpdateHandler struct {
+	Blobfile string
+	Backend  Backend
+}
+
+// ServeHTTP appends data from POST body to existing blob file.
+func (u UpdateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	key := r.URL.Query().Get("key")
+	if key == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("update: key query parameter required"))
+		return
+	}
+	extractor := ParsingExtractor{Key: key}
+	f, err := ioutil.TempFile("", "microblob-")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if _, err := io.Copy(f, r.Body); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("temporary copy failed: " + err.Error()))
+		return
+	}
+	defer r.Body.Close()
+	defer os.Remove(f.Name())
+	if err := Append(u.Blobfile, f.Name(), u.Backend, extractor.ExtractKey); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("append: " + err.Error()))
+		return
+	}
+	return
 }
 
 func init() {

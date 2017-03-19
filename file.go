@@ -19,7 +19,8 @@ func Append(blobfn, fn string, backend Backend, kf KeyFunc) error {
 func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int) (err error) {
 	mu.Lock()
 	defer mu.Unlock()
-	file, err := os.OpenFile(blobfn, os.O_APPEND|os.O_RDWR, 0644)
+
+	file, err := os.OpenFile(blobfn, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		return err
 	}
@@ -50,9 +51,7 @@ func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int) (
 	processor := NewLineProcessor(file, backend.WriteEntries, kf)
 	processor.BatchSize = size
 	processor.InitialOffset = offset
-
-	err = processor.RunWithWorkers()
-	if err != nil {
+	if err = processor.RunWithWorkers(); err != nil {
 		if terr := os.Truncate(blobfn, offset); terr != nil {
 			return fmt.Errorf("processing and truncate failed: %v, %v", err, terr)
 		}

@@ -5,7 +5,6 @@ import (
 	_ "expvar"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -95,34 +94,7 @@ func main() {
 				"vars":    fmt.Sprintf("http://%s/debug/vars", r.Host),
 			})
 		})
-		r.HandleFunc("/update", func(w http.ResponseWriter, r *http.Request) {
-			key := r.URL.Query().Get("key")
-			if key == "" {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte("update: key query parameter required"))
-				return
-			}
-			extractor := microblob.ParsingExtractor{Key: key}
-			f, err := ioutil.TempFile("", "microblob-")
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
-			if _, err := io.Copy(f, r.Body); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("temporary copy failed: " + err.Error()))
-				return
-			}
-			defer r.Body.Close()
-			defer os.Remove(f.Name())
-			if err := microblob.Append(*blobfile, f.Name(), backend, extractor.ExtractKey); err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte("append: " + err.Error()))
-				return
-			}
-			return
-		})
+		r.Handle("/update", microblob.UpdateHandler{Backend: backend, Blobfile: *blobfile})
 		r.Handle("/blob", blobHandler)     // Legacy route.
 		r.Handle("/{key:.+}", blobHandler) // Preferred.
 
@@ -132,6 +104,11 @@ func main() {
 		if err := http.ListenAndServe(*addr, loggedRouter); err != nil {
 			log.Fatal(err)
 		}
+	}
+
+	if *blobfile == "" {
+		log.Println("blobfile does not exist, skipping indexing")
+		os.Exit(0)
 	}
 
 	var extractor microblob.KeyExtractor
