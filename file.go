@@ -2,7 +2,6 @@ package microblob
 
 import (
 	"io"
-	"log"
 	"os"
 	"sync"
 )
@@ -21,7 +20,7 @@ func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int) (
 	defer mu.Unlock()
 	file, err := os.OpenFile(blobfn, os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer file.Close()
 
