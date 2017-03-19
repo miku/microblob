@@ -1,6 +1,7 @@
 package microblob
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -50,5 +51,11 @@ func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int) (
 	processor.BatchSize = size
 	processor.InitialOffset = offset
 
-	return processor.RunWithWorkers()
+	err = processor.RunWithWorkers()
+	if err != nil {
+		if terr := os.Truncate(blobfn, offset); terr != nil {
+			return fmt.Errorf("processing and truncate failed: %v, %v", err, terr)
+		}
+	}
+	return err
 }
