@@ -9,7 +9,7 @@ import (
 // mu protects updates.
 var mu sync.Mutex
 
-// Append add a file to an existing blob file and adds their keys to the store. Not thread safe.
+// Append add a file to an existing blob file and adds their keys to the store.
 func Append(blobfn, fn string, backend Backend, kf KeyFunc) error {
 	return AppendBatchSize(blobfn, fn, backend, kf, 100000)
 }
