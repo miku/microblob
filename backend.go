@@ -54,10 +54,11 @@ func (b DebugBackend) Get(key string) ([]byte, error) { return []byte{}, nil }
 
 // LevelDBBackend writes entries into LevelDB.
 type LevelDBBackend struct {
-	Blobfile string
-	blob     *os.File
-	Filename string
-	db       *leveldb.DB
+	Blobfile         string
+	blob             *os.File
+	Filename         string
+	db               *leveldb.DB
+	AllowEmptyValues bool
 	sync.Mutex
 }
 

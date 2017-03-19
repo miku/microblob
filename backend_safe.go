@@ -5,6 +5,7 @@ package microblob
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 )
 
@@ -63,5 +64,10 @@ func (b *LevelDBBackend) Get(key string) (data []byte, err error) {
 	if _, err = b.blob.Read(data); err != nil {
 		return nil, err
 	}
+
+	if !b.AllowEmptyValues && IsAllZero(data) {
+		return nil, fmt.Errorf("empty value")
+	}
+
 	return data, nil
 }
