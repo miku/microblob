@@ -7,8 +7,8 @@ It is fast to rebuild from scratch and to insert additional documents. It
 scales up and down with memory and can serve hundred million documents and
 more.
 
-Usage
------
+Example
+-------
 
 ```shell
 $ microblob -db test.db -file test.file -serve
