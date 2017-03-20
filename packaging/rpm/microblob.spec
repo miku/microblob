@@ -38,6 +38,7 @@ rm -rf %{_topdir}/BUILD/%{name}
 %defattr(-,root,root)
 
 /usr/local/sbin/microblob
+/usr/local/share/man/man1/microblob.1
 
 %changelog
 
