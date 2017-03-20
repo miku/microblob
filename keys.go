@@ -2,6 +2,7 @@ package microblob
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -142,6 +143,9 @@ func (p LineProcessor) RunWithWorkers() error {
 		}
 		if err != nil {
 			return err
+		}
+		if len(bytes.TrimSpace(b)) == 0 {
+			continue
 		}
 		if len(batch) == p.BatchSize {
 			bb := make([][]byte, len(batch))
