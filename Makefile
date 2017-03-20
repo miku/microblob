@@ -19,7 +19,7 @@ deb: $(TARGETS)
 	mkdir -p packaging/deb/$(PKGNAME)/usr/sbin
 	cp $(TARGETS) packaging/deb/$(PKGNAME)/usr/sbin
 	# md2man-roff microblob.md > microblob.1
-	mkdir -p packaging/deb/$(PKGNAME)/usr/local/share/man
+	mkdir -p packaging/deb/$(PKGNAME)/usr/local/share/man/man1
 	cp docs/microblob.1 packaging/deb/$(PKGNAME)/usr/local/share/man/man1
 	cd packaging/deb && fakeroot dpkg-deb --build $(PKGNAME) .
 	mv packaging/deb/$(PKGNAME)_*.deb .
