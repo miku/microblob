@@ -20,7 +20,7 @@ var (
 // finalNewlineReader appends a final newline to a byte stream, but only if there is not already one.
 type finalNewlineReader struct {
 	r    io.Reader
-	done bool
+	done bool // true, when r has been fully read
 }
 
 func (r *finalNewlineReader) Read(p []byte) (n int, err error) {
