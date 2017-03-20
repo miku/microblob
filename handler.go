@@ -104,6 +104,7 @@ func (u UpdateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	extractor := ParsingExtractor{Key: key}
+
 	f, err := ioutil.TempFile("", "microblob-")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -117,6 +118,12 @@ func (u UpdateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 	defer os.Remove(f.Name())
+
+	if err := f.Close(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("temporary file close failed: " + err.Error()))
+	}
+
 	if err := Append(u.Blobfile, f.Name(), u.Backend, extractor.ExtractKey); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("append: " + err.Error()))
