@@ -7,7 +7,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"sync"
 )
+
+var mu sync.Mutex // Protects seek and read on systems without pread.
 
 // Get retrieves the data for a given key.
 // Raw timings of the operations:
@@ -55,8 +58,8 @@ func (b *LevelDBBackend) Get(key string) (data []byte, err error) {
 
 	data = make([]byte, length)
 
-	b.Lock()
-	defer b.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 
 	if _, err = b.blob.Seek(offset, io.SeekStart); err != nil {
 		return nil, err

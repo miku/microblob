@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sync"
 
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -59,7 +58,6 @@ type LevelDBBackend struct {
 	Filename         string
 	db               *leveldb.DB
 	AllowEmptyValues bool
-	sync.Mutex
 }
 
 // Close closes database handle and blob file.
