@@ -32,7 +32,7 @@ func (r *finalNewlineReader) Read(p []byte) (n int, err error) {
 		return 0, nil
 	}
 	n, err = r.r.Read(p)
-	if err == io.EOF && p[n-1] != 10 {
+	if err == io.EOF && (n == 0 || p[n-1] != 10) {
 		r.done = true
 		return n, nil
 	}
