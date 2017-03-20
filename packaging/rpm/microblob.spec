@@ -20,8 +20,12 @@ A simple key value store for JSON data.
 %pre
 
 %install
+
 mkdir -p $RPM_BUILD_ROOT/usr/local/sbin
 install -m 755 microblob $RPM_BUILD_ROOT/usr/local/sbin
+
+mkdir -p $RPM_BUILD_ROOT/usr/local/share/man/man1
+install -m 644 microblob.1 $RPM_BUILD_ROOT/usr/local/share/man/man1/microblob.1
 
 %post
 
