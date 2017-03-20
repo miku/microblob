@@ -17,6 +17,28 @@ var (
 	lastResponseTime *expvar.Float
 )
 
+// finalNewlineReader appends a final newline to a byte stream, but only if there is not already one.
+type finalNewlineReader struct {
+	r    io.Reader
+	done bool
+}
+
+func (r *finalNewlineReader) Read(p []byte) (n int, err error) {
+	if r.done {
+		if len(p) > 0 {
+			p[0] = 10
+			return 1, io.EOF
+		}
+		return 0, nil
+	}
+	n, err = r.r.Read(p)
+	if err == io.EOF && p[n-1] != 10 {
+		r.done = true
+		return n, nil
+	}
+	return
+}
+
 // WithLastResponseTime keeps track of the last response time in exported variable
 // lastResponseTime.
 func WithLastResponseTime(h http.Handler) http.Handler {
@@ -88,7 +110,7 @@ func (u UpdateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	if _, err := io.Copy(f, r.Body); err != nil {
+	if _, err := io.Copy(f, &finalNewlineReader{r: r.Body}); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("temporary copy failed: " + err.Error()))
 		return
