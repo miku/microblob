@@ -3,12 +3,37 @@ microblob
 
 microblob is a key-value store that serves documents from a file over HTTP.
 
-It is fast to rebuild from scratch and to insert additional documents. It
-scales up and down with memory and can serve hundred million documents and
-more.
+The main use case was to quickly serve a single file of newline delimited JSON
+documents over HTTP. For example, if we want to serve documents by the property
+attribute value *id*, we can say:
 
-Example
--------
+```shell
+$ cat path/to/file.ldj
+{"id": "some-id-1", "name": "alice"}
+{"id": "some-id-2", "name": "bob"}
+...
+
+$ microblob -db test.db -file path/to/file.ldj -key id
+$ microblob -db test.db -file path/to/file.ldj -serve
+...
+$ curl localhost:8820/some-id-1
+{"id": "some-id-1", "name": "alice"}
+```
+
+It supports fast rebuilds from scratch and additional documents can be added
+easily. It scales up and down with memory and can serve hundred million
+documents and more.
+
+Inspiration: [So what's wrong with 1975
+programming?](http://varnish-cache.org/docs/trunk/phk/notes.html#so-what-s-wrong-with-1975-programming).
+Idea: Instead of implementing complicated caching mechanisms, we hand over
+caching completely to the operating system and try to stay out of its way.
+
+Inserts are super fast, since no data is actually moved. A 120G file containing
+about 100 million documents can be serveable within an hour.
+
+More examples
+-------------
 
 ```shell
 $ microblob -db test.db -file test.file -serve
@@ -70,9 +95,6 @@ $ microblob -db test.db -file fixtures/fake-00-09.ldj -key id
 $ microblob -db test.db -file fixtures/fake-00-09.ldj -serve
 2017/03/20 11:19:36 serving blobs from fixtures/fake-00-09.ldj on 127.0.0.1:8820 ...
 ```
-
-
-Inspiration: [So what's wrong with 1975 programming?](http://varnish-cache.org/docs/trunk/phk/notes.html#so-what-s-wrong-with-1975-programming)
 
 Usage
 -----
