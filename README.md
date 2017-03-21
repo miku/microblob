@@ -136,7 +136,7 @@ What it doesn't do
 
 * no deletions (microblob is currently append-only and does not care about garbage, so if you add more and more things, you will run out of space)
 * no compression (yet)
-
+* no security (anyone can query update via HTTP)
 
 Installation
 ------------
