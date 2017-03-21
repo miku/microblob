@@ -4,7 +4,7 @@ microblob
 microblob is a key-value store that serves documents from a file over HTTP.
 
 The main use case was to quickly serve a single file of newline delimited JSON
-documents over HTTP. For example, if we want to serve documents by the property
+documents over HTTP. For example, if we want to serve documents by the
 attribute value *id*, we can say:
 
 ```shell
@@ -25,7 +25,7 @@ easily. It scales up and down with memory and can serve hundred million
 documents and more.
 
 Inspiration: [So what's wrong with 1975
-programming?](http://varnish-cache.org/docs/trunk/phk/notes.html#so-what-s-wrong-with-1975-programming).
+programming?](http://varnish-cache.org/docs/trunk/phk/notes.html#so-what-s-wrong-with-1975-programming)
 Idea: Instead of implementing complicated caching mechanisms, we hand over
 caching completely to the operating system and try to stay out of its way.
 
@@ -129,4 +129,15 @@ Usage of microblob:
   -version
         show version and exit
 
+```
+
+Installation
+------------
+
+Debian and RPM packages: see [releases](https://github.com/miku/microblob/releases).
+
+Or:
+
+```shell
+$ go get github.com/miku/microblob/cmd/...
 ```
