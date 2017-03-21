@@ -49,6 +49,29 @@ $ curl -s localhost:8820/id-5 | jq .
 }
 ```
 
+One use case for microblob was to serve data from a single file without (or
+only a few) updates. Given a JSON file to serve, this will be the fastest
+method to index and serve the file:
+
+```shell
+$ cat fixtures/fake-00-09.ldj
+{"name": "hello", "id": "id-0"}
+{"name": "hello", "id": "id-1"}
+{"name": "hello", "id": "id-2"}
+{"name": "hello", "id": "id-3"}
+{"name": "hello", "id": "id-4"}
+{"name": "hello", "id": "id-5"}
+{"name": "hello", "id": "id-6"}
+{"name": "hello", "id": "id-7"}
+{"name": "hello", "id": "id-8"}
+{"name": "hello", "id": "id-9"}
+
+$ microblob -db test.db -file fixtures/fake-00-09.ldj -key id
+$ microblob -db test.db -file fixtures/fake-00-09.ldj -serve
+2017/03/20 11:19:36 serving blobs from fixtures/fake-00-09.ldj on 127.0.0.1:8820 ...
+```
+
+
 Inspiration: [So what's wrong with 1975 programming?](http://varnish-cache.org/docs/trunk/phk/notes.html#so-what-s-wrong-with-1975-programming)
 
 Usage
