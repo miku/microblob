@@ -32,6 +32,10 @@ caching completely to the operating system and try to stay out of its way.
 Inserts are super fast, since no data is actually moved. A 120G file containing
 about 100 million documents can be serveable within an hour.
 
+----
+
+![](https://raw.githubusercontent.com/miku/microblob/master/docs/5o246a55txsnqa7wvqgx7inrs.gif)
+
 More examples
 -------------
 
