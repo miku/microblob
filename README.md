@@ -100,6 +100,13 @@ $ microblob -db test.db -file fixtures/fake-00-09.ldj -serve
 2017/03/20 11:19:36 serving blobs from fixtures/fake-00-09.ldj on 127.0.0.1:8820 ...
 ```
 
+To send compressed data with curl:
+
+```shell
+$ curl -v --data-binary @- localhost:8820/update?key=id < <(gunzip -c fixtures/fake.ldj.gz)
+...
+```
+
 Usage
 -----
 
