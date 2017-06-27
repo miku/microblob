@@ -4,7 +4,7 @@ MICROBLOB 1 "MARCH 2017" "Leipzig University Library" "Manuals"
 NAME
 ----
 
-microblob - a simple key value server
+microblob - a simplistic key value server
 
 SYNOPSIS
 --------
@@ -19,21 +19,26 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-microblob serves documents from a file over HTTP. It finds and keeps the offsets
-and lengths of the documents in a small embedded key-value store. When a key is
-looked up, it will lookup the offset and length in the embedded key-value store
-and then read the region directly from the file.
+microblob serves JSON documents from a single file over HTTP. It finds and
+keeps the offsets and lengths of the documents in a small embedded key-value
+store. When a key is requested, it will lookup the offset and length in the
+key-value store, seek to the offset and read from the file.
 
-Performance will be dependent on how much of the original file can be kept in
-the operating systems' page cache.
+Performance will depend on how much of the file can be kept in the operating
+systems' page cache.
 
-You can move data into the buffer cache with a simple cat(1) to null(4):
+You can move data into the page cache with a simple cat(1) to null(4):
 
   `cat` *blobfile* `> /dev/null`
 
 microblob can be updated via HTTP while running. Concurrent updates are not
-supported, but won't cause errors, just block. After a successful update, the
-new documents are appended to the *blobfile*. The store is append-only.
+supported: they do not cause errors, just block. After a successful update, the
+new documents are appended to the *blobfile*. At the moment microblob is
+append-only.
+
+The use case for microblob is the create-once, update-never case. A newline
+delimited JSON file with 120M documents and a filesize of 130G can be servable
+in 40 minutes, which amounts to 50k documents/s or 55M/s sustained inserts.
 
 OPTIONS
 -------
@@ -74,7 +79,7 @@ OPTIONS
 EXAMPLES
 --------
 
-Index a JSON file names example.ldj, use "id" field as key, then serve on port
+First, index a JSON file named example.ldj and use "id" field as key, then serve on port
 12345 on localhost:
 
     $ microblob -db example.db -file example.ldj -key id
