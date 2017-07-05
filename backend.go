@@ -1,5 +1,4 @@
 // Package microblob implements a thin layer above LevelDB to implement a key-value store.
-
 package microblob
 
 import (

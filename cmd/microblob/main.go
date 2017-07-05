@@ -121,11 +121,6 @@ func main() {
 		}
 	}
 
-	if *blobfile == "" {
-		log.Println("blobfile does not exist, skipping indexing")
-		os.Exit(0)
-	}
-
 	var extractor microblob.KeyExtractor
 
 	switch {
