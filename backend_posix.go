@@ -9,16 +9,6 @@ import (
 	"syscall"
 )
 
-// IsAllZero returns true, if all bytes in a slice are zero.
-func IsAllZero(p []byte) bool {
-	for _, b := range p {
-		if b != 0 {
-			return false
-		}
-	}
-	return true
-}
-
 // Get retrieves the data for a given key, using pread(2).
 func (b *LevelDBBackend) Get(key string) (data []byte, err error) {
 	if err = b.openDatabase(); err != nil {

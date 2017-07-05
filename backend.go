@@ -122,3 +122,13 @@ func (b *LevelDBBackend) openDatabase() error {
 	b.db = db
 	return nil
 }
+
+// IsAllZero returns true, if all bytes in a slice are zero.
+func IsAllZero(p []byte) bool {
+	for _, b := range p {
+		if b != 0 {
+			return false
+		}
+	}
+	return true
+}
