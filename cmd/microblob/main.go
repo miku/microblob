@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	_ "expvar"
 	"flag"
 	"fmt"
@@ -12,9 +11,7 @@ import (
 	"regexp"
 
 	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 	"github.com/miku/microblob"
-	"github.com/thoas/stats"
 )
 
 func main() {
@@ -71,51 +68,11 @@ func main() {
 	}
 
 	if *serve {
-		metrics := stats.New()
-		blobHandler := metrics.Handler(
-			microblob.WithLastResponseTime(
-				&microblob.BlobHandler{Backend: backend}))
+		log.Printf("microblob at %v", *addr)
 
-		r := mux.NewRouter()
-		r.Handle("/debug/vars", http.DefaultServeMux)
-		r.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			if err := json.NewEncoder(w).Encode(metrics.Data()); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-		})
-		r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			if err := json.NewEncoder(w).Encode(map[string]interface{}{
-				"name":    "microblob",
-				"version": microblob.Version,
-				"stats":   fmt.Sprintf("http://%s/stats", r.Host),
-				"vars":    fmt.Sprintf("http://%s/debug/vars", r.Host),
-			}); err != nil {
-				http.Error(w, "could not serialize", http.StatusInternalServerError)
-			}
-		})
-		r.HandleFunc("/count", func(w http.ResponseWriter, r *http.Request) {
-			if c, ok := backend.(microblob.Counter); ok {
-				if count, err := c.Count(); err == nil {
-					if err := json.NewEncoder(w).Encode(map[string]interface{}{
-						"count": count,
-					}); err != nil {
-						http.Error(w, "could not serialize", http.StatusInternalServerError)
-					}
-				}
-			} else {
-				http.Error(w, "not implemented", http.StatusNotFound)
-			}
-		})
-		r.Handle("/update", microblob.UpdateHandler{Backend: backend, Blobfile: *blobfile})
-		r.Handle("/blob", blobHandler)     // Legacy route.
-		r.Handle("/{key:.+}", blobHandler) // Preferred.
-
+		r := microblob.NewHandler(backend, *blobfile, loggingWriter)
 		loggedRouter := handlers.LoggingHandler(loggingWriter, r)
 
-		log.Printf("serving blobs from %[1]s on %[2]s, metrics at %[2]s/stats and %[2]s/debug/vars", *blobfile, *addr)
 		if err := http.ListenAndServe(*addr, loggedRouter); err != nil {
 			log.Fatal(err)
 		}
