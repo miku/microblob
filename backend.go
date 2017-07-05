@@ -22,6 +22,11 @@ type Entry struct {
 	Length int64  `json:"l"`
 }
 
+// Counter can return the number of elements.
+type Counter interface {
+	Count() (int64, error)
+}
+
 // Backend abstracts various implementations.
 type Backend interface {
 	Get(key string) ([]byte, error)
@@ -92,6 +97,21 @@ func (b *LevelDBBackend) WriteEntries(entries []Entry) error {
 		batch.Put([]byte(entry.Key), value)
 	}
 	return b.db.Write(batch, nil)
+}
+
+// Count returns the number of documents added. LevelDB says: There is no way
+// to implement Count more efficiently inside leveldb than outside."
+func (b *LevelDBBackend) Count() (n int64, err error) {
+	if err = b.openDatabase(); err != nil {
+		return 0, err
+	}
+	iter := b.db.NewIterator(nil, nil)
+	defer iter.Release()
+	for iter.Next() {
+		n++
+	}
+	err = iter.Error()
+	return
 }
 
 // openBlob opens the raw file. Save to call many times.

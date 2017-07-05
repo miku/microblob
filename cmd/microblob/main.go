@@ -87,12 +87,27 @@ func main() {
 		})
 		r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{
+			if err := json.NewEncoder(w).Encode(map[string]interface{}{
 				"name":    "microblob",
 				"version": microblob.Version,
 				"stats":   fmt.Sprintf("http://%s/stats", r.Host),
 				"vars":    fmt.Sprintf("http://%s/debug/vars", r.Host),
-			})
+			}); err != nil {
+				http.Error(w, "could not serialize", http.StatusInternalServerError)
+			}
+		})
+		r.HandleFunc("/count", func(w http.ResponseWriter, r *http.Request) {
+			if c, ok := backend.(microblob.Counter); ok {
+				if count, err := c.Count(); err == nil {
+					if err := json.NewEncoder(w).Encode(map[string]interface{}{
+						"count": count,
+					}); err != nil {
+						http.Error(w, "could not serialize", http.StatusInternalServerError)
+					}
+				}
+			} else {
+				http.Error(w, "not implemented", http.StatusNotFound)
+			}
 		})
 		r.Handle("/update", microblob.UpdateHandler{Backend: backend, Blobfile: *blobfile})
 		r.Handle("/blob", blobHandler)     // Legacy route.
