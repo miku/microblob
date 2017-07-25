@@ -21,7 +21,7 @@ func main() {
 	keypath := flag.String("key", "", "key to extract, json, top-level only")
 	dbname := flag.String("backend", "leveldb", "backend to use: leveldb, debug")
 	addr := flag.String("addr", "127.0.0.1:8820", "address to serve")
-	batchsize := flag.Int("batch", 100000, "number of lines in a batch")
+	batchsize := flag.Int("batch", 400000, "number of lines in a batch")
 	version := flag.Bool("version", false, "show version and exit")
 	logfile := flag.String("log", "", "access log file, don't log if empty")
 
