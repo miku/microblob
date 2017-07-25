@@ -3,7 +3,6 @@ package microblob
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -11,7 +10,7 @@ import (
 )
 
 // NewHandler sets up routes for serving and stats.
-func NewHandler(backend Backend, blobfile string, loggingWriter io.Writer) http.Handler {
+func NewHandler(backend Backend, blobfile string) http.Handler {
 	metrics := stats.New()
 	blobHandler := metrics.Handler(
 		WithLastResponseTime(

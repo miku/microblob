@@ -39,3 +39,5 @@ packaging/deb/microblob/usr
 
 vagrant.key
 /.vagrant/*
+
+fixtures/*microdb

@@ -9,11 +9,11 @@ microblob - a simplistic key value server
 SYNOPSIS
 --------
 
-`microblob` `-db` *dbpath* `-file` *blobfile* `-key` *string* [-append *file*] [-batch *NUM*]
+`microblob` `-key` *string* [-batch *NUM*] *blobfile*
 
-`microblob` `-db` *dbpath* `-file` *blobfile* `-r` *pattern* [-append *file*] [-batch *NUM*]
+`microblob` `-r` *pattern* [-batch *NUM*] *blobfile*
 
-`microblob` `-db` *dbpath* `-file` *blobfile* `-serve` [-log *file*] [-addr *hostport*]
+`microblob` [-log *file*] [-addr *hostport*] *blobfile*
 
 
 DESCRIPTION
@@ -46,20 +46,11 @@ OPTIONS
 `-addr` *HOSTPORT*
   Hostport to listen (default "127.0.0.1:8820").
 
-`-append` *FILE*
-  Append this file to existing file and index into existing database.
-
 `-backend` *NAME*
   Backend to use: leveldb, debug (default "leveldb").
 
 `-batch`
   Number of lines in a batch (default 100000).
-
-`-db` *FILE*
-  Path to use for backend (default "data.db").
-
-`-file` *FILE*
-  File to index or serve.
 
 `-key` *STRING*
   Key to extract, JSON, top-level only.
@@ -70,9 +61,6 @@ OPTIONS
 `-r` *PATTERN*
   Regular expression to use as key extractor.
 
-`-serve`
-  Serve file.
-
 `-version`
   Show version and exit.
 
@@ -82,13 +70,13 @@ EXAMPLES
 First, index a JSON file named example.ldj and use "id" field as key, then serve on port
 12345 on localhost:
 
-    $ microblob -db example.db -file example.ldj -key id
-    $ microblob -db example.db -file example.ldj -serve -addr localhost:12345
+    $ microblob -key id example.ldj
+    $ microblob -key id -addr localhost:12345 example.ldj
 
 Start an *empty* server, then index two documents with different keys, then
 query. Neither `hello.db` not `hello.ldj` exist an the beginning:
 
-    $ microblob -db hello.db -file hello.ldj -serve
+    $ microblob hello.ldj
     ...
 
     $ curl -XPOST -d '{"id": 1, "name": "alice"}' localhost:8820/update?key=id
