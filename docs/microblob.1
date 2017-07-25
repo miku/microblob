@@ -4,11 +4,11 @@
 microblob \- a simplistic key value server
 .SH SYNOPSIS
 .PP
-\fB\fCmicroblob\fR \fB\fC\-db\fR \fIdbpath\fP \fB\fC\-file\fR \fIblobfile\fP \fB\fC\-key\fR \fIstring\fP [\-append \fIfile\fP] [\-batch \fINUM\fP]
+\fB\fCmicroblob\fR \fB\fC\-key\fR \fIstring\fP [\-batch \fINUM\fP] \fIblobfile\fP
 .PP
-\fB\fCmicroblob\fR \fB\fC\-db\fR \fIdbpath\fP \fB\fC\-file\fR \fIblobfile\fP \fB\fC\-r\fR \fIpattern\fP [\-append \fIfile\fP] [\-batch \fINUM\fP]
+\fB\fCmicroblob\fR \fB\fC\-r\fR \fIpattern\fP [\-batch \fINUM\fP] \fIblobfile\fP
 .PP
-\fB\fCmicroblob\fR \fB\fC\-db\fR \fIdbpath\fP \fB\fC\-file\fR \fIblobfile\fP \fB\fC\-serve\fR [\-log \fIfile\fP] [\-addr \fIhostport\fP]
+\fB\fCmicroblob\fR [\-log \fIfile\fP] [\-addr \fIhostport\fP] \fIblobfile\fP
 .SH DESCRIPTION
 .PP
 microblob serves JSON documents from a single file over HTTP. It finds and
@@ -39,20 +39,11 @@ in 40 minutes, which amounts to 50k documents/s or 55M/s sustained inserts.
 \fB\fC\-addr\fR \fIHOSTPORT\fP
 Hostport to listen (default "127.0.0.1:8820").
 .TP
-\fB\fC\-append\fR \fIFILE\fP
-Append this file to existing file and index into existing database.
-.TP
 \fB\fC\-backend\fR \fINAME\fP
 Backend to use: leveldb, debug (default "leveldb").
 .TP
 \fB\fC\-batch\fR
 Number of lines in a batch (default 100000).
-.TP
-\fB\fC\-db\fR \fIFILE\fP
-Path to use for backend (default "data.db").
-.TP
-\fB\fC\-file\fR \fIFILE\fP
-File to index or serve.
 .TP
 \fB\fC\-key\fR \fISTRING\fP
 Key to extract, JSON, top\-level only.
@@ -63,9 +54,6 @@ Access log file, don't log if empty.
 \fB\fC\-r\fR \fIPATTERN\fP
 Regular expression to use as key extractor.
 .TP
-\fB\fC\-serve\fR
-Serve file.
-.TP
 \fB\fC\-version\fR
 Show version and exit.
 .SH EXAMPLES
@@ -75,8 +63,8 @@ First, index a JSON file named example.ldj and use "id" field as key, then serve
 .PP
 .RS
 .nf
-$ microblob \-db example.db \-file example.ldj \-key id
-$ microblob \-db example.db \-file example.ldj \-serve \-addr localhost:12345
+$ microblob \-key id example.ldj
+$ microblob \-key id \-addr localhost:12345 example.ldj
 .fi
 .RE
 .PP
@@ -85,7 +73,7 @@ query. Neither \fB\fChello.db\fR not \fB\fChello.ldj\fR exist an the beginning:
 .PP
 .RS
 .nf
-$ microblob \-db hello.db \-file hello.ldj \-serve
+$ microblob hello.ldj
 \&...
 
 $ curl \-XPOST \-d '{"id": 1, "name": "alice"}' localhost:8820/update?key=id
