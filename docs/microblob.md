@@ -9,23 +9,24 @@ microblob - a simplistic key value server
 SYNOPSIS
 --------
 
-`microblob` `-key` *string* [-batch *NUM*] *blobfile*
+`microblob` `-key` *string* [-addr *HOSTPORT*] [-batch *NUM*] [-log *file*] *blobfile*
 
-`microblob` `-r` *pattern* [-batch *NUM*] *blobfile*
-
-`microblob` [-log *file*] [-addr *hostport*] *blobfile*
-
+`microblob` `-r` *pattern* [-addr *HOSTPORT*] [-batch *NUM*] [-log *file*] *blobfile*
 
 DESCRIPTION
 -----------
 
-microblob serves JSON documents from a single file over HTTP. It finds and
-keeps the offsets and lengths of the documents in a small embedded key-value
-store. When a key is requested, it will lookup the offset and length in the
-key-value store, seek to the offset and read from the file.
+microblob serves documents from a single file (of newline delimited JSON) over
+HTTP. It finds and keeps the offsets and lengths of the documents in a small
+embedded database. When a key is requested, it will lookup the offset and
+length, seek to the offset and read from the file.
 
-Performance will depend on how much of the file can be kept in the operating
-systems' page cache.
+The use case for microblob is the *create-once*, *update-never* case. A file
+with 120M documents (130GB) is servable in 40 minutes (50k docs/s or 55M/s
+sustained *inserts*).
+
+Serving Performance will depend on how much of the file can be kept in the
+operating systems' page cache.
 
 You can move data into the page cache with a simple cat(1) to null(4):
 
@@ -33,12 +34,8 @@ You can move data into the page cache with a simple cat(1) to null(4):
 
 microblob can be updated via HTTP while running. Concurrent updates are not
 supported: they do not cause errors, just block. After a successful update, the
-new documents are appended to the *blobfile*. At the moment microblob is
-append-only.
-
-The use case for microblob is the create-once, update-never case. A newline
-delimited JSON file with 120M documents and a filesize of 130G can be servable
-in 40 minutes, which amounts to 50k documents/s or 55M/s sustained inserts.
+new documents are appended to the *blobfile*. Currently microblob is
+*append-only*.
 
 OPTIONS
 -------
@@ -67,14 +64,14 @@ OPTIONS
 EXAMPLES
 --------
 
-First, index a JSON file named example.ldj and use "id" field as key, then serve on port
-12345 on localhost:
+Index and serve (on port localhost:12345) a JSON file named *example.ldj* and
+use *id* field as key:
 
-    $ microblob -key id example.ldj
     $ microblob -key id -addr localhost:12345 example.ldj
+    ...
 
-Start an *empty* server, then index two documents with different keys, then
-query. Neither `hello.db` not `hello.ldj` exist an the beginning:
+Start with an *empty* blobfile, then index two documents with different keys,
+then query (hello.ldj does not exists at the beginning):
 
     $ microblob hello.ldj
     ...
@@ -90,6 +87,11 @@ query. Neither `hello.db` not `hello.ldj` exist an the beginning:
 
 DIAGNOSTICS
 -----------
+
+Get current number of documents (might take a few seconds):
+
+    $ curl -s localhost:8820/count
+    {"count": 12391823}
 
 Live usage statistics are exposed over HTTP:
 
@@ -115,12 +117,12 @@ Live usage statistics are exposed over HTTP:
 The response time of the last key query is exposed over HTTP as well:
 
     $ curl -s localhost:8820/debug/vars | jq .lastResponseTime
-    5.6743e-05
+    0.001238
 
 BUGS
 ----
 
-Please report bugs to https://github.com/miku/microblob/issues.
+Please report bugs to <https://github.com/miku/microblob/issues>.
 
 AUTHORS
 -------

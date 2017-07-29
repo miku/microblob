@@ -4,20 +4,22 @@
 microblob \- a simplistic key value server
 .SH SYNOPSIS
 .PP
-\fB\fCmicroblob\fR \fB\fC\-key\fR \fIstring\fP [\-batch \fINUM\fP] \fIblobfile\fP
+\fB\fCmicroblob\fR \fB\fC\-key\fR \fIstring\fP [\-addr \fIHOSTPORT\fP] [\-batch \fINUM\fP] [\-log \fIfile\fP] \fIblobfile\fP
 .PP
-\fB\fCmicroblob\fR \fB\fC\-r\fR \fIpattern\fP [\-batch \fINUM\fP] \fIblobfile\fP
-.PP
-\fB\fCmicroblob\fR [\-log \fIfile\fP] [\-addr \fIhostport\fP] \fIblobfile\fP
+\fB\fCmicroblob\fR \fB\fC\-r\fR \fIpattern\fP [\-addr \fIHOSTPORT\fP] [\-batch \fINUM\fP] [\-log \fIfile\fP] \fIblobfile\fP
 .SH DESCRIPTION
 .PP
-microblob serves JSON documents from a single file over HTTP. It finds and
-keeps the offsets and lengths of the documents in a small embedded key\-value
-store. When a key is requested, it will lookup the offset and length in the
-key\-value store, seek to the offset and read from the file.
+microblob serves documents from a single file (of newline delimited JSON) over
+HTTP. It finds and keeps the offsets and lengths of the documents in a small
+embedded database. When a key is requested, it will lookup the offset and
+length, seek to the offset and read from the file.
 .PP
-Performance will depend on how much of the file can be kept in the operating
-systems' page cache.
+The use case for microblob is the \fIcreate\-once\fP, \fIupdate\-never\fP case. A file
+with 120M documents (130GB) is servable in 40 minutes (50k docs/s or 55M/s
+sustained \fIinserts\fP).
+.PP
+Serving Performance will depend on how much of the file can be kept in the
+operating systems' page cache.
 .PP
 You can move data into the page cache with a simple 
 .BR cat (1) 
@@ -28,12 +30,8 @@ to
 .PP
 microblob can be updated via HTTP while running. Concurrent updates are not
 supported: they do not cause errors, just block. After a successful update, the
-new documents are appended to the \fIblobfile\fP\&. At the moment microblob is
-append\-only.
-.PP
-The use case for microblob is the create\-once, update\-never case. A newline
-delimited JSON file with 120M documents and a filesize of 130G can be servable
-in 40 minutes, which amounts to 50k documents/s or 55M/s sustained inserts.
+new documents are appended to the \fIblobfile\fP\&. Currently microblob is
+\fIappend\-only\fP\&.
 .SH OPTIONS
 .TP
 \fB\fC\-addr\fR \fIHOSTPORT\fP
@@ -58,18 +56,18 @@ Regular expression to use as key extractor.
 Show version and exit.
 .SH EXAMPLES
 .PP
-First, index a JSON file named example.ldj and use "id" field as key, then serve on port
-12345 on localhost:
+Index and serve (on port localhost:12345) a JSON file named \fIexample.ldj\fP and
+use \fIid\fP field as key:
 .PP
 .RS
 .nf
-$ microblob \-key id example.ldj
 $ microblob \-key id \-addr localhost:12345 example.ldj
+\&...
 .fi
 .RE
 .PP
-Start an \fIempty\fP server, then index two documents with different keys, then
-query. Neither \fB\fChello.db\fR not \fB\fChello.ldj\fR exist an the beginning:
+Start with an \fIempty\fP blobfile, then index two documents with different keys,
+then query (hello.ldj does not exists at the beginning):
 .PP
 .RS
 .nf
@@ -87,6 +85,15 @@ $ curl \-s localhost:8820/2
 .fi
 .RE
 .SH DIAGNOSTICS
+.PP
+Get current number of documents (might take a few seconds):
+.PP
+.RS
+.nf
+$ curl \-s localhost:8820/count
+{"count": 12391823}
+.fi
+.RE
 .PP
 Live usage statistics are exposed over HTTP:
 .PP
@@ -118,7 +125,7 @@ The response time of the last key query is exposed over HTTP as well:
 .RS
 .nf
 $ curl \-s localhost:8820/debug/vars | jq .lastResponseTime
-5.6743e\-05
+0.001238
 .fi
 .RE
 .SH BUGS
