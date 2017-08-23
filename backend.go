@@ -99,7 +99,7 @@ func (b *LevelDBBackend) WriteEntries(entries []Entry) error {
 }
 
 // Count returns the number of documents added. LevelDB says: There is no way
-// to implement Count more efficiently inside leveldb than outside."
+// to implement Count more efficiently inside leveldb than outside.
 func (b *LevelDBBackend) Count() (n int64, err error) {
 	if err = b.openDatabase(); err != nil {
 		return 0, err
