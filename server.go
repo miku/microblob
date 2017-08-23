@@ -34,6 +34,7 @@ func NewHandler(backend Backend, blobfile string) http.Handler {
 			"vars":    fmt.Sprintf("http://%s/debug/vars", r.Host),
 		}); err != nil {
 			http.Error(w, "could not serialize", http.StatusInternalServerError)
+			return
 		}
 	})
 	r.HandleFunc("/count", func(w http.ResponseWriter, r *http.Request) {
@@ -43,10 +44,12 @@ func NewHandler(backend Backend, blobfile string) http.Handler {
 					"count": count,
 				}); err != nil {
 					http.Error(w, "could not serialize", http.StatusInternalServerError)
+					return
 				}
 			}
 		} else {
 			http.Error(w, "not implemented", http.StatusNotFound)
+			return
 		}
 	})
 	r.Handle("/update", UpdateHandler{Backend: backend, Blobfile: blobfile})
