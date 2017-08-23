@@ -46,6 +46,8 @@ func NewHandler(backend Backend, blobfile string) http.Handler {
 					http.Error(w, "could not serialize", http.StatusInternalServerError)
 					return
 				}
+				http.Error(w, fmt.Sprintf("count failed: %s", err), http.StatusInternalServerError)
+				return
 			}
 		} else {
 			http.Error(w, "not implemented", http.StatusNotFound)
