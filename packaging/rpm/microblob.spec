@@ -25,7 +25,7 @@ mkdir -p $RPM_BUILD_ROOT/usr/local/sbin
 install -m 755 microblob $RPM_BUILD_ROOT/usr/local/sbin
 
 mkdir -p $RPM_BUILD_ROOT/usr/local/share/man/man1
-install -m 644 microblob.1 $RPM_BUILD_ROOT/usr/local/share/man/man1/microblob.1
+install -m 644 microblob.1.gz $RPM_BUILD_ROOT/usr/local/share/man/man1/microblob.1.gz
 
 %post
 
@@ -38,7 +38,7 @@ rm -rf %{_topdir}/BUILD/%{name}
 %defattr(-,root,root)
 
 /usr/local/sbin/microblob
-/usr/local/share/man/man1/microblob.1
+/usr/local/share/man/man1/microblob.1.gz
 
 %changelog
 
