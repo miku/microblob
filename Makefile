@@ -2,6 +2,7 @@ SHELL = /bin/bash
 
 TARGETS = microblob
 PKGNAME = microblob
+ARCH = $$(dpkg --print-architecture)
 
 all: $(TARGETS)
 
@@ -23,9 +24,9 @@ deb: $(TARGETS)
 	cp docs/microblob.1.gz packaging/deb/$(PKGNAME)/usr/share/man/man1
 	find packaging/deb/$(PKGNAME)/usr -type d -exec chmod 0755 {} \;
 	find packaging/deb/$(PKGNAME)/usr -type f -exec chmod 0644 {} \;
+	cp packaging/deb/control.$(ARCH) packaging/deb/$(PKGNAME)/DEBIAN/control
 	cd packaging/deb && fakeroot dpkg-deb --build $(PKGNAME) .
 	mv packaging/deb/$(PKGNAME)_*.deb .
-	rename "s/any\.deb$$/$$(dpkg --print-architecture).deb/" *.deb
 
 rpm: $(TARGETS)
 	mkdir -p $(HOME)/rpmbuild/{BUILD,SOURCES,SPECS,RPMS}

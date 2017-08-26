@@ -1,0 +1,9 @@
+Package: microblob
+Version: 0.2.3
+Section: utils
+Priority: optional
+Architecture: armhf
+Depends: libc6 (>= 2.12)
+Maintainer: Martin Czygan <martin.czygan@uni-leipzig.de>
+Description: Simple key value store for JSON data.
+ This server is optimized for write-once, read-often kind of setups.
