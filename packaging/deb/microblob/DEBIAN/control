@@ -2,7 +2,7 @@ Package: microblob
 Version: 0.2.2
 Section: utils
 Priority: optional
-Architecture: amd64
+Architecture: any
 Depends: libc6 (>= 2.12)
 Maintainer: Martin Czygan <martin.czygan@uni-leipzig.de>
 Description: Simple key value store for JSON data.

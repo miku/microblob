@@ -25,6 +25,7 @@ deb: $(TARGETS)
 	find packaging/deb/$(PKGNAME)/usr -type f -exec chmod 0644 {} \;
 	cd packaging/deb && fakeroot dpkg-deb --build $(PKGNAME) .
 	mv packaging/deb/$(PKGNAME)_*.deb .
+	rename "s/any\.deb$$/$$(dpkg --print-architecture).deb/" *.deb
 
 rpm: $(TARGETS)
 	mkdir -p $(HOME)/rpmbuild/{BUILD,SOURCES,SPECS,RPMS}
