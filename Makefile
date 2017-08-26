@@ -7,7 +7,7 @@ all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
 	go get -v ./...
-	go build -v -o $@ $<
+	go build -ldflags="-s -w" -v -o $@ $<
 
 clean:
 	rm -f $(TARGETS)
@@ -18,9 +18,11 @@ clean:
 deb: $(TARGETS)
 	mkdir -p packaging/deb/$(PKGNAME)/usr/sbin
 	cp $(TARGETS) packaging/deb/$(PKGNAME)/usr/sbin
-	# md2man-roff microblob.md > microblob.1
-	mkdir -p packaging/deb/$(PKGNAME)/usr/local/share/man/man1
-	cp docs/microblob.1 packaging/deb/$(PKGNAME)/usr/local/share/man/man1
+	# md2man-roff microblob.md | gzip -n -9 -c > microblob.1.gz
+	mkdir -p packaging/deb/$(PKGNAME)/usr/share/man/man1
+	cp docs/microblob.1.gz packaging/deb/$(PKGNAME)/usr/share/man/man1
+	find packaging/deb/$(PKGNAME)/usr -type d -exec chmod 0755 {} \;
+	find packaging/deb/$(PKGNAME)/usr -type f -exec chmod 0644 {} \;
 	cd packaging/deb && fakeroot dpkg-deb --build $(PKGNAME) .
 	mv packaging/deb/$(PKGNAME)_*.deb .
 
