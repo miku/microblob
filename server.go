@@ -39,14 +39,13 @@ func NewHandler(backend Backend, blobfile string) http.Handler {
 	})
 	r.HandleFunc("/count", func(w http.ResponseWriter, r *http.Request) {
 		if c, ok := backend.(Counter); ok {
-			if count, err := c.Count(); err == nil {
-				if err := json.NewEncoder(w).Encode(map[string]interface{}{
-					"count": count,
-				}); err != nil {
-					http.Error(w, "could not serialize", http.StatusInternalServerError)
-					return
-				}
+			count, err := c.Count()
+			if err != nil {
 				http.Error(w, fmt.Sprintf("count failed: %s", err), http.StatusInternalServerError)
+				return
+			}
+			if err := json.NewEncoder(w).Encode(map[string]int64{"count": count}); err != nil {
+				http.Error(w, "could not serialize", http.StatusInternalServerError)
 				return
 			}
 		} else {
