@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"regexp"
 	"runtime"
 	"sync"
 	"time"
 
+	"github.com/gosuri/uiprogress"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -146,6 +148,21 @@ func (p LineProcessor) RunWithWorkers() error {
 	var blen int64
 	batch := [][]byte{}
 
+	var filesize int64
+	var bar *uiprogress.Bar
+
+	if f, ok := p.r.(*os.File); ok {
+		fi, err := f.Stat()
+		if err != nil {
+			return err
+		}
+		filesize = fi.Size()
+		uiprogress.Start()
+		bar = uiprogress.AddBar(int(filesize))
+		bar.AppendCompleted()
+		bar.PrependElapsed()
+	}
+
 	for {
 		b, err := br.ReadBytes('\n')
 		if err == io.EOF {
@@ -172,6 +189,9 @@ func (p LineProcessor) RunWithWorkers() error {
 			if p.Verbose {
 				log.Printf("sent batch to worker: %d", offset)
 			}
+			if _, ok := p.r.(*os.File); ok {
+				bar.Set(int(offset))
+			}
 			offset += blen
 			blen, batch = 0, nil
 		}
@@ -184,6 +204,11 @@ func (p LineProcessor) RunWithWorkers() error {
 	bb := make([][]byte, len(batch))
 	copy(bb, batch)
 	work <- workPackage{docs: bb, offset: offset}
+
+	if _, ok := p.r.(*os.File); ok {
+		uiprogress.Stop()
+		bar.Set(int(filesize))
+	}
 
 	close(work)
 	wg.Wait()
