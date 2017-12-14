@@ -51,9 +51,13 @@ func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int) (
 	processor := NewLineProcessor(file, backend.WriteEntries, kf)
 	processor.BatchSize = size
 	processor.InitialOffset = offset
+	processor.Verbose = true
+
 	if err = processor.RunWithWorkers(); err != nil {
-		if terr := os.Truncate(blobfn, offset); terr != nil {
-			return fmt.Errorf("processing and truncate failed: %v, %v", err, terr)
+		if fn != "" {
+			if terr := os.Truncate(blobfn, offset); terr != nil {
+				return fmt.Errorf("processing and truncate failed: %v, %v", err, terr)
+			}
 		}
 	}
 	return err

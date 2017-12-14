@@ -1,19 +1,18 @@
 package main
 
 import (
+	"crypto/sha1"
 	_ "expvar"
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"regexp"
 
-	"crypto/sha1"
-
 	"github.com/gorilla/handlers"
 	"github.com/miku/microblob"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -21,7 +20,7 @@ func main() {
 	keypath := flag.String("key", "", "key to extract, json, top-level only")
 	dbname := flag.String("backend", "leveldb", "backend to use: leveldb, debug")
 	addr := flag.String("addr", "127.0.0.1:8820", "address to serve")
-	batchsize := flag.Int("batch", 400000, "number of lines in a batch")
+	batchsize := flag.Int("batch", 200000, "number of lines in a batch")
 	version := flag.Bool("version", false, "show version and exit")
 	logfile := flag.String("log", "", "access log file, don't log if empty")
 
@@ -42,6 +41,10 @@ func main() {
 		log.Fatal("need a file to index or serve")
 	}
 
+	if *keypath == "" && *pattern == "" {
+		log.Fatal("need path or pattern to identify key")
+	}
+
 	var dbfile string
 
 	if dbfile == "" {
@@ -49,7 +52,7 @@ func main() {
 		if _, err := fmt.Fprintf(h, "%s:%s:%s", *dbname, *keypath, *pattern); err != nil {
 			log.Fatal(err)
 		}
-		dbfile = fmt.Sprintf("%s.%x.microdb", blobfile, h.Sum(nil))
+		dbfile = fmt.Sprintf("%s.%.4x.db", blobfile, h.Sum(nil))
 	}
 
 	var backend microblob.Backend
@@ -83,7 +86,7 @@ func main() {
 
 	// If dbfile does not exists, create it now.
 	if _, err := os.Stat(dbfile); os.IsNotExist(err) {
-		log.Printf("building file map (%s)", dbfile)
+		log.Printf("creating db %s ...", dbfile)
 		var extractor microblob.KeyExtractor
 
 		switch {
@@ -93,16 +96,13 @@ func main() {
 				log.Fatal(err)
 			}
 			extractor = microblob.RegexpExtractor{Pattern: p}
-			if err := microblob.AppendBatchSize(blobfile, "", backend, extractor.ExtractKey, *batchsize); err != nil {
-				log.Fatal(err)
-			}
 		case *keypath != "":
 			extractor = microblob.ParsingExtractor{Key: *keypath}
-			if err := microblob.AppendBatchSize(blobfile, "", backend, extractor.ExtractKey, *batchsize); err != nil {
-				log.Fatal(err)
-			}
 		}
-
+		if err := microblob.AppendBatchSize(blobfile, "", backend, extractor.ExtractKey, *batchsize); err != nil {
+			os.RemoveAll(dbfile)
+			log.Fatal(err)
+		}
 	}
 
 	log.Printf("listening at http://%v (%s)", *addr, dbfile)

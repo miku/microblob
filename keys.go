@@ -11,6 +11,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // KeyExtractor extracts a string key from data.
@@ -31,6 +33,7 @@ type LineProcessor struct {
 	w             EntryWriter // serializes entries
 	BatchSize     int         // number of lines in a batch
 	InitialOffset int64       // allow offsets beside zero
+	Verbose       bool
 }
 
 // NewLineProcessor reads lines from the given reader, extracts the key with the
@@ -78,7 +81,6 @@ type workPackage struct {
 // RunWithWorkers start processing the input, uses multiple workers.
 func (p LineProcessor) RunWithWorkers() error {
 
-	// workerErr is set, when a worker fails. Winds down processing.
 	var processingErr error
 
 	// Setup communication channels.
@@ -90,6 +92,9 @@ func (p LineProcessor) RunWithWorkers() error {
 	collector := func(ch chan []Entry, done chan bool) {
 		for batch := range ch {
 			if err := p.w(batch); err != nil {
+				if p.Verbose {
+					log.Printf("could not write batch: %v", err)
+				}
 				processingErr = err
 				break
 			}
@@ -107,6 +112,9 @@ func (p LineProcessor) RunWithWorkers() error {
 			for _, b := range pkg.docs {
 				key, err := p.f(b)
 				if err != nil {
+					if p.Verbose {
+						log.Printf("worker error: %v", err)
+					}
 					processingErr = err
 					break
 				}
@@ -114,9 +122,11 @@ func (p LineProcessor) RunWithWorkers() error {
 				entries = append(entries, Entry{key, offset, length})
 				offset += length
 			}
-
 			updates <- entries
 			if processingErr != nil {
+				if p.Verbose {
+					log.Printf("worker failed: %v", processingErr)
+				}
 				break
 			}
 		}
@@ -144,19 +154,32 @@ func (p LineProcessor) RunWithWorkers() error {
 		if err != nil {
 			return err
 		}
-		if len(bytes.TrimSpace(b)) == 0 {
+		b = bytes.TrimSpace(b)
+		if len(b) == 0 {
 			continue
 		}
 		if len(batch) == p.BatchSize {
+			if processingErr != nil {
+				if p.Verbose {
+					log.Printf("stopping early due to processing err: %v", processingErr)
+				}
+				// XXX: leaks resources.
+				return processingErr
+			}
 			bb := make([][]byte, len(batch))
 			copy(bb, batch)
 			work <- workPackage{docs: bb, offset: offset}
+			if p.Verbose {
+				log.Printf("sent batch to worker: %d", offset)
+			}
 			offset += blen
 			blen, batch = 0, nil
 		}
 		batch = append(batch, b)
 		blen += int64(len(b))
 	}
+
+	log.Printf("sending final batch")
 
 	bb := make([][]byte, len(batch))
 	copy(bb, batch)
