@@ -158,7 +158,7 @@ func (p LineProcessor) RunWithWorkers() error {
 		}
 		filesize = fi.Size()
 		uiprogress.Start()
-		bar = uiprogress.AddBar(int(filesize))
+		bar = uiprogress.AddBar(int(filesize)).PrependElapsed().AppendCompleted()
 	}
 
 	for {
