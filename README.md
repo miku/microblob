@@ -27,8 +27,6 @@ can be serveable within an hour.
 
 * ㊗️ 2017-06-30 first 100 million requests served in production
 
-![](https://github.com/miku/microblob/blob/master/docs/demo.gif)
-
 Update via curl
 ---------------
 
