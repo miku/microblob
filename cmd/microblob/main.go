@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
 	"regexp"
 
 	"github.com/gorilla/handlers"
@@ -87,6 +88,18 @@ func main() {
 	// If dbfile does not exists, create it now.
 	if _, err := os.Stat(dbfile); os.IsNotExist(err) {
 		log.Printf("creating db %s ...", dbfile)
+
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+		go func() {
+			for sig := range c {
+				log.Printf("%v -- cleaning up: %s", sig, dbfile)
+				if err := os.RemoveAll(dbfile); err != nil {
+					log.Fatal(err)
+				}
+			}
+		}()
+
 		var extractor microblob.KeyExtractor
 
 		switch {
@@ -103,6 +116,7 @@ func main() {
 			os.RemoveAll(dbfile)
 			log.Fatal(err)
 		}
+		signal.Stop(c)
 	}
 
 	log.Printf("listening at http://%v (%s)", *addr, dbfile)
