@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gosuri/uiprogress"
+	"github.com/schollz/progressbar"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -149,7 +150,7 @@ func (p LineProcessor) RunWithWorkers() error {
 	batch := [][]byte{}
 
 	var filesize int64
-	var bar *uiprogress.Bar
+	var bar *progressbar.ProgressBar
 
 	if f, ok := p.r.(*os.File); ok {
 		fi, err := f.Stat()
@@ -157,8 +158,7 @@ func (p LineProcessor) RunWithWorkers() error {
 			return err
 		}
 		filesize = fi.Size()
-		uiprogress.Start()
-		bar = uiprogress.AddBar(int(filesize)).PrependElapsed().AppendCompleted()
+		bar = progressbar.New(int(filesize))
 	}
 
 	for {
