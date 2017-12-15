@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gosuri/uiprogress"
 	"github.com/schollz/progressbar"
 	log "github.com/sirupsen/logrus"
 )
@@ -197,15 +196,13 @@ func (p LineProcessor) RunWithWorkers() error {
 		blen += int64(len(b))
 	}
 
-	log.Printf("sending final batch")
-
 	bb := make([][]byte, len(batch))
 	copy(bb, batch)
 	work <- workPackage{docs: bb, offset: offset}
 
 	if _, ok := p.r.(*os.File); ok {
-		uiprogress.Stop()
 		bar.Set(int(filesize))
+		fmt.Println()
 	}
 
 	close(work)
