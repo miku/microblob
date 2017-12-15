@@ -43,4 +43,5 @@ vagrant.key
 fixtures/*microdb
 packaging/deb/microblob/DEBIAN/control
 fixtures/1000.ldj.*
+fixtures/1M.ldj
 fixtures/*.db
