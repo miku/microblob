@@ -97,6 +97,7 @@ func main() {
 				if err := os.RemoveAll(dbfile); err != nil {
 					log.Fatal(err)
 				}
+				os.Exit(0)
 			}
 		}()
 
