@@ -183,9 +183,6 @@ func (p LineProcessor) RunWithWorkers() error {
 			bb := make([][]byte, len(batch))
 			copy(bb, batch)
 			work <- workPackage{docs: bb, offset: offset}
-			if p.Verbose {
-				log.Printf("sent batch to worker: %d", offset)
-			}
 			if _, ok := p.r.(*os.File); ok {
 				bar.Set(int(offset))
 			}
