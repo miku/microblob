@@ -168,8 +168,7 @@ func (p LineProcessor) RunWithWorkers() error {
 		if err != nil {
 			return err
 		}
-		b = bytes.TrimSpace(b)
-		if len(b) == 0 {
+		if len(bytes.TrimSpace(b)) == 0 {
 			continue
 		}
 		if len(batch) == p.BatchSize {
@@ -234,7 +233,7 @@ func (e ParsingExtractor) ExtractKey(b []byte) (s string, err error) {
 		return
 	}
 	if _, ok := dst[e.Key]; !ok {
-		return "", fmt.Errorf("key %s not found in: %s", e.Key, string(b))
+		return "", fmt.Errorf("key %s not found in: %s", e.Key, string(bytes.TrimSpace(b)))
 	}
 	return renderString(dst[e.Key])
 }
