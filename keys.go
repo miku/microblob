@@ -30,12 +30,13 @@ type EntryWriter func(entries []Entry) error
 
 // LineProcessor reads a line, extracts the key and writes entries.
 type LineProcessor struct {
-	r             io.Reader   // input data
-	f             KeyFunc     // extracts a string key from a byte blob
-	w             EntryWriter // serializes entries
-	BatchSize     int         // number of lines in a batch
-	InitialOffset int64       // allow offsets beside zero
-	Verbose       bool
+	r                 io.Reader   // input data
+	f                 KeyFunc     // extracts a string key from a byte blob
+	w                 EntryWriter // serializes entries
+	BatchSize         int         // number of lines in a batch
+	InitialOffset     int64       // allow offsets beside zero
+	Verbose           bool
+	IgnoreMissingKeys bool // skip document with missing keys
 }
 
 // NewLineProcessor reads lines from the given reader, extracts the key with the
@@ -93,6 +94,12 @@ func (p LineProcessor) RunWithWorkers() error {
 				if err != nil {
 					if p.Verbose {
 						log.Printf("worker error: %v", err)
+					}
+					if p.IgnoreMissingKeys {
+						if p.Verbose {
+							log.Printf("ignoring missing key at offset: %d", offset)
+							continue
+						}
 					}
 					processingErr = err
 					break
@@ -160,7 +167,7 @@ func (p LineProcessor) RunWithWorkers() error {
 			copy(bb, batch)
 			work <- workPackage{docs: bb, offset: offset}
 			if _, ok := p.r.(*os.File); ok {
-				bar.Set(int(offset))
+				bar.Add(int(offset))
 			}
 			offset += blen
 			blen, batch = 0, nil
@@ -174,7 +181,7 @@ func (p LineProcessor) RunWithWorkers() error {
 	work <- workPackage{docs: bb, offset: offset}
 
 	if _, ok := p.r.(*os.File); ok {
-		bar.Set(int(filesize))
+		bar.Add(int(filesize))
 		fmt.Println()
 	}
 

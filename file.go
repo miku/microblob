@@ -12,11 +12,11 @@ var mu sync.Mutex
 
 // Append add a file to an existing blob file and adds their keys to the store.
 func Append(blobfn, fn string, backend Backend, kf KeyFunc) error {
-	return AppendBatchSize(blobfn, fn, backend, kf, 100000)
+	return AppendBatchSize(blobfn, fn, backend, kf, 100000, false)
 }
 
 // AppendBatchSize uses a given batch size.
-func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int) (err error) {
+func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int, ignoreMissingKeys bool) (err error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -52,6 +52,7 @@ func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int) (
 	processor.BatchSize = size
 	processor.InitialOffset = offset
 	processor.Verbose = true
+	processor.IgnoreMissingKeys = ignoreMissingKeys
 
 	if err = processor.RunWithWorkers(); err != nil {
 		if fn != "" {

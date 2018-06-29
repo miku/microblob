@@ -24,6 +24,7 @@ func main() {
 	batchsize := flag.Int("batch", 200000, "number of lines in a batch")
 	version := flag.Bool("version", false, "show version and exit")
 	logfile := flag.String("log", "", "access log file, don't log if empty")
+	ignoreMissingKeys := flag.Bool("ignore-missing-keys", false, "ignore record, that do not have a the specified key")
 
 	flag.Parse()
 
@@ -113,7 +114,7 @@ func main() {
 		case *keypath != "":
 			extractor = microblob.ParsingExtractor{Key: *keypath}
 		}
-		if err := microblob.AppendBatchSize(blobfile, "", backend, extractor.ExtractKey, *batchsize); err != nil {
+		if err := microblob.AppendBatchSize(blobfile, "", backend, extractor.ExtractKey, *batchsize, *ignoreMissingKeys); err != nil {
 			os.RemoveAll(dbfile)
 			log.Fatal(err)
 		}
