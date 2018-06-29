@@ -51,29 +51,6 @@ func NewLineProcessorBatchSize(r io.Reader, w EntryWriter, f KeyFunc, size int) 
 	return LineProcessor{r: r, w: w, f: f, BatchSize: size}
 }
 
-// Run starts processing the input, sequential version.
-// TODO(miku): Remove, since this is not used anymore.
-func (p LineProcessor) Run() error {
-	bw := bufio.NewReader(p.r)
-	for {
-		b, err := bw.ReadBytes('\n')
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		key, err := p.f(b)
-		if err != nil {
-			return err
-		}
-		if err := p.w([]Entry{Entry{Key: key}}); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // workPackage is a unit of work handed to a worker.
 type workPackage struct {
 	docs   [][]byte // list of documents to work on
