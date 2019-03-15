@@ -116,6 +116,8 @@ func main() {
 			extractor = microblob.ParsingExtractor{Key: *keypath}
 		case *toplevel:
 			extractor = microblob.ToplevelKeyExtractor{}
+		default:
+			log.Fatal("exactly one key extraction method required: -r, -key or -t")
 		}
 		if err := microblob.AppendBatchSize(blobfile, "", backend, extractor.ExtractKey, *batchsize, *ignoreMissingKeys); err != nil {
 			os.RemoveAll(dbfile)
