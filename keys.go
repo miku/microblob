@@ -222,6 +222,21 @@ func (e ParsingExtractor) ExtractKey(b []byte) (s string, err error) {
 	return renderString(dst[e.Key])
 }
 
+// ToplevelKeyExtractor parses a JSON object, where the actual object is nested
+// under a top level key, e.g. {"mykey1": {"name": "alice"}}.
+type ToplevelKeyExtractor struct{}
+
+func (e ToplevelKeyExtractor) ExtractKey(b []byte) (s string, err error) {
+	dst := make(map[string]interface{})
+	if err = json.Unmarshal(b, &dst); err != nil {
+		return
+	}
+	for k := range dst {
+		return k, nil
+	}
+	return "", fmt.Errorf("no top level key: %v", string(b))
+}
+
 // renderString tries various ways to get a string out of a given type.
 func renderString(v interface{}) (s string, err error) {
 	switch w := v.(type) {

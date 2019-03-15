@@ -18,6 +18,7 @@ import (
 
 func main() {
 	pattern := flag.String("r", "", "regular expression to use as key extractor")
+	toplevel := flag.Bool("t", false, "top level key extractor")
 	keypath := flag.String("key", "", "key to extract, json, top-level only")
 	dbname := flag.String("backend", "leveldb", "backend to use: leveldb, debug")
 	addr := flag.String("addr", "127.0.0.1:8820", "address to serve")
@@ -113,6 +114,8 @@ func main() {
 			extractor = microblob.RegexpExtractor{Pattern: p}
 		case *keypath != "":
 			extractor = microblob.ParsingExtractor{Key: *keypath}
+		case *toplevel:
+			extractor = microblob.ToplevelKeyExtractor{}
 		}
 		if err := microblob.AppendBatchSize(blobfile, "", backend, extractor.ExtractKey, *batchsize, *ignoreMissingKeys); err != nil {
 			os.RemoveAll(dbfile)
