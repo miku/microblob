@@ -54,6 +54,7 @@ Usage of microblob:
           access log file, don't log if empty
   -r string
           regular expression to use as key extractor
+  -t    top level key extractor
   -version
           show version and exit
 
