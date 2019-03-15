@@ -44,7 +44,7 @@ func main() {
 		log.Fatal("need a file to index or serve")
 	}
 
-	if *keypath == "" && *pattern == "" && !toplevel {
+	if *keypath == "" && *pattern == "" && !*toplevel {
 		log.Fatal("need path, pattern or -t to identify key")
 	}
 
