@@ -13,6 +13,8 @@ SYNOPSIS
 
 `microblob` `-r` *pattern* [-addr *HOSTPORT*] [-batch *NUM*] [-log *file*] *blobfile*
 
+`microblob` `-t` [-addr *HOSTPORT*] [-batch *NUM*] [-log *file*] *blobfile*
+
 DESCRIPTION
 -----------
 
@@ -57,6 +59,9 @@ OPTIONS
 
 `-r` *PATTERN*
   Regular expression to use as key extractor.
+
+`-t`
+  Top level key extractor.
 
 `-version`
   Show version and exit.
