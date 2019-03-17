@@ -1,7 +1,9 @@
 microblob
 =========
 
-microblob serves documents from a file over HTTP.
+microblob is a simplistic key-value store, that serves documents from a file
+over HTTP. It is implemented in 728 lines of code and does not contain many
+features.
 
 ```shell
 $ cat file.ldj
