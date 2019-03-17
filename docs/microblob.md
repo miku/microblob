@@ -34,10 +34,24 @@ You can move data into the page cache with a simple cat(1) to null(4):
 
   `cat` *blobfile* `> /dev/null`
 
+There exist tools for inquiring the number of cached pages for a given file or
+directory. One such tool is: https://github.com/tobert/pcstat
+
+> A common question when tuning databases and other IO-intensive applications
+> is, "is Linux caching my data or not?" pcstat gets that information for you
+> using the mincore(2) syscall.
+
+UPDATES
+-------
+
 microblob can be updated via HTTP while running. Concurrent updates are not
 supported: they do not cause errors, just block. After a successful update, the
 new documents are appended to the *blobfile*. Currently microblob is
 *append-only*.
+
+If you need frequent updates, consider something else, e.g.  Badger, RocksDB,
+memcachedb, or one of the many others
+https://db-engines.com/en/ranking/key-value+store.
 
 OPTIONS
 -------

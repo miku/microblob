@@ -30,10 +30,26 @@ to
 .IP
 \fB\fCcat\fR \fIblobfile\fP \fB\fC> /dev/null\fR
 .PP
+There exist tools for inquiring the number of cached pages for a given file or
+directory. One such tool is: \[la]https://github.com/tobert/pcstat\[ra]
+.PP
+.RS
+A common question when tuning databases and other IO\-intensive applications
+is, "is Linux caching my data or not?" pcstat gets that information for you
+using the 
+.BR mincore (2) 
+syscall.
+.RE
+.SH UPDATES
+.PP
 microblob can be updated via HTTP while running. Concurrent updates are not
 supported: they do not cause errors, just block. After a successful update, the
 new documents are appended to the \fIblobfile\fP\&. Currently microblob is
 \fIappend\-only\fP\&.
+.PP
+If you need frequent updates, consider something else, e.g.  Badger, RocksDB,
+memcachedb, or one of the many others
+\[la]https://db-engines.com/en/ranking/key-value+store\[ra]\&.
 .SH OPTIONS
 .TP
 \fB\fC\-addr\fR \fIHOSTPORT\fP
