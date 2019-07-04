@@ -1,9 +1,12 @@
-microblob
-=========
+# microblob
 
 microblob is a simplistic key-value store, that serves documents from a file
 over HTTP. It is implemented in 728 lines of code and does not contain many
 features.
+
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+
+This project has been developed for [Project finc](https://finc.info) at [Leipzig University Library](https://ub.uni-leipzig.de).
 
 ```shell
 $ cat file.ldj
@@ -29,8 +32,7 @@ can be serveable within an hour.
 
 * ㊗️ 2017-06-30 first 100 million requests served in production
 
-Update via curl
----------------
+# Update via curl
 
 To send compressed data with curl:
 
@@ -39,8 +41,7 @@ $ curl -v --data-binary @- localhost:8820/update?key=id < <(gunzip -c fixtures/f
 ...
 ```
 
-Usage
------
+# Usage
 
 ```shell
 Usage of microblob:
@@ -62,16 +63,14 @@ Usage of microblob:
 
 ```
 
-What it doesn't do
-------------------
+# What it doesn't do
 
 * no deletions (microblob is currently append-only and does not care about
   garbage, so if you add more and more things, you will run out of space)
 * no compression (yet)
 * no security (anyone can query or update via HTTP)
 
-Installation
-------------
+# Installation
 
 Debian and RPM packages: see [releases](https://github.com/miku/microblob/releases).
 
