@@ -1,8 +1,8 @@
 # microblob
 
 microblob is a simplistic key-value store, that serves documents from a file
-over HTTP. It is implemented in 728 lines of code and does not contain many
-features.
+over HTTP. It is implemented in a few hundred lines of code and does not
+contain many features.
 
 [![DOI](https://zenodo.org/badge/82800367.svg)](https://zenodo.org/badge/latestdoi/82800367) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
