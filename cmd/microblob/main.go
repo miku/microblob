@@ -123,6 +123,7 @@ func main() {
 			os.RemoveAll(dbfile)
 			log.Fatal(err)
 		}
+		close(c)
 		signal.Stop(c)
 	}
 
