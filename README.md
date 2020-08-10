@@ -4,8 +4,8 @@ microblob is a simplistic key-value store, that serves documents from a file
 over HTTP. It is implemented in a few hundred lines of code and does not
 contain many features.
 
-Warning: This server should not be exposed publicly as it contains no security,
-rate-limiting or other safety measures.
+Warning: This server **should not be exposed publicly** as it contains no security,
+rate-limiting or other safety measures whatsoever.
 
 microblob was written in 2017 as an ad-hoc solution to replace a previous setup
 using memcachedb (which was getting slow). The main goal has been to serve
