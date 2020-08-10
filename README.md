@@ -32,6 +32,8 @@ can be serveable within an hour.
 
 * ㊗️ 2017-06-30 first 100 million requests served in production
 
+More docs: [docs/microblob.md](docs/microblob.md)
+
 # Update via curl
 
 To send compressed data with curl:
