@@ -16,16 +16,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	pattern           = flag.String("r", "", "regular expression to use as key extractor")
+	toplevel          = flag.Bool("t", false, "top level key extractor")
+	keypath           = flag.String("key", "", "key to extract, json, top-level only")
+	dbname            = flag.String("backend", "leveldb", "backend to use: leveldb, debug")
+	addr              = flag.String("addr", "127.0.0.1:8820", "address to serve")
+	batchsize         = flag.Int("batch", 200000, "number of lines in a batch")
+	version           = flag.Bool("version", false, "show version and exit")
+	logfile           = flag.String("log", "", "access log file, don't log if empty")
+	ignoreMissingKeys = flag.Bool("ignore-missing-keys", false, "ignore record, that do not have a the specified key")
+	dbOnly            = flag.Bool("db-only", false, "build the database only")
+)
+
 func main() {
-	pattern := flag.String("r", "", "regular expression to use as key extractor")
-	toplevel := flag.Bool("t", false, "top level key extractor")
-	keypath := flag.String("key", "", "key to extract, json, top-level only")
-	dbname := flag.String("backend", "leveldb", "backend to use: leveldb, debug")
-	addr := flag.String("addr", "127.0.0.1:8820", "address to serve")
-	batchsize := flag.Int("batch", 200000, "number of lines in a batch")
-	version := flag.Bool("version", false, "show version and exit")
-	logfile := flag.String("log", "", "access log file, don't log if empty")
-	ignoreMissingKeys := flag.Bool("ignore-missing-keys", false, "ignore record, that do not have a the specified key")
 
 	flag.Parse()
 
@@ -126,7 +130,9 @@ func main() {
 		close(c)
 		signal.Stop(c)
 	}
-
+	if *dbOnly {
+		os.Exit(0)
+	}
 	log.Printf("listening at http://%v (%s)", *addr, dbfile)
 	r := microblob.NewHandler(backend, blobfile)
 	loggedRouter := handlers.LoggingHandler(loggingWriter, r)
