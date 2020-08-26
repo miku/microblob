@@ -26,54 +26,44 @@ var (
 	version           = flag.Bool("version", false, "show version and exit")
 	logfile           = flag.String("log", "", "access log file, don't log if empty")
 	ignoreMissingKeys = flag.Bool("ignore-missing-keys", false, "ignore record, that do not have a the specified key")
-	dbOnly            = flag.Bool("db-only", false, "build the database only, then exit")
+	dbOnly            = flag.Bool("create-db-only", false, "build the database only, then exit")
+	dbFile            = flag.String("db", "", "the root directory, by default: 1000.ldj -> 1000.ldj.05028f38.db (based on flags)")
 )
 
 func main() {
-
 	flag.Parse()
-
 	if *version {
 		fmt.Println(microblob.Version)
 		os.Exit(0)
 	}
-
 	if flag.NArg() == 0 {
-		log.Fatal("file to index and serve required")
+		log.Fatal("file to index (and serve) required")
 	}
-
 	blobfile := flag.Arg(0)
-
 	if blobfile == "" {
 		log.Fatal("need a file to index or serve")
 	}
-
 	if *keypath == "" && *pattern == "" && !*toplevel {
 		log.Fatal("need path, pattern or -t to identify key")
 	}
-
-	var dbfile string
-
-	if dbfile == "" {
+	if *dbFile == "" {
 		h := sha1.New()
 		if _, err := fmt.Fprintf(h, "%s:%s:%s", *dbname, *keypath, *pattern); err != nil {
 			log.Fatal(err)
 		}
-		dbfile = fmt.Sprintf("%s.%.4x.db", blobfile, h.Sum(nil))
+		*dbFile = fmt.Sprintf("%s.%.4x.db", blobfile, h.Sum(nil))
 	}
 
 	var backend microblob.Backend
-
 	switch *dbname {
 	case "debug":
 		backend = microblob.DebugBackend{Writer: os.Stdout}
 	default:
 		backend = &microblob.LevelDBBackend{
-			Filename: dbfile,
+			Filename: *dbFile,
 			Blobfile: blobfile,
 		}
 	}
-
 	defer func() {
 		if err := backend.Close(); err != nil {
 			log.Fatal(err)
@@ -81,7 +71,6 @@ func main() {
 	}()
 
 	var loggingWriter = ioutil.Discard
-
 	if *logfile != "" {
 		file, err := os.OpenFile(*logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
@@ -90,25 +79,21 @@ func main() {
 		loggingWriter = file
 		defer file.Close()
 	}
-
 	// If dbfile does not exists, create it now.
-	if _, err := os.Stat(dbfile); os.IsNotExist(err) {
-		log.Printf("creating db %s ...", dbfile)
-
+	if _, err := os.Stat(*dbFile); os.IsNotExist(err) {
+		log.Printf("creating db %s ...", *dbFile)
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
 		go func() {
 			for sig := range c {
-				log.Printf("%v -- cleaning up: %s", sig, dbfile)
-				if err := os.RemoveAll(dbfile); err != nil {
+				log.Printf("%v -- cleaning up: %s", sig, *dbFile)
+				if err := os.RemoveAll(*dbFile); err != nil {
 					log.Fatal(err)
 				}
 				os.Exit(0)
 			}
 		}()
-
 		var extractor microblob.KeyExtractor
-
 		switch {
 		case *pattern != "":
 			p, err := regexp.Compile(*pattern)
@@ -123,8 +108,9 @@ func main() {
 		default:
 			log.Fatal("exactly one key extraction method required: -r, -key or -t")
 		}
-		if err := microblob.AppendBatchSize(blobfile, "", backend, extractor.ExtractKey, *batchsize, *ignoreMissingKeys); err != nil {
-			os.RemoveAll(dbfile)
+		if err := microblob.AppendBatchSize(blobfile, "", backend,
+			extractor.ExtractKey, *batchsize, *ignoreMissingKeys); err != nil {
+			os.RemoveAll(*dbFile)
 			log.Fatal(err)
 		}
 		close(c)
@@ -133,9 +119,11 @@ func main() {
 	if *dbOnly {
 		os.Exit(0)
 	}
-	log.Printf("listening at http://%v (%s)", *addr, dbfile)
-	r := microblob.NewHandler(backend, blobfile)
-	loggedRouter := handlers.LoggingHandler(loggingWriter, r)
+	log.Printf("listening at http://%v (%s)", *addr, *dbFile)
+	var (
+		r            = microblob.NewHandler(backend, blobfile)
+		loggedRouter = handlers.LoggingHandler(loggingWriter, r)
+	)
 	if err := http.ListenAndServe(*addr, loggedRouter); err != nil {
 		log.Fatal(err)
 	}
