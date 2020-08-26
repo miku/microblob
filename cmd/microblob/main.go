@@ -1,3 +1,10 @@
+// Exectable for microblob, can read options from flags or an ini file:
+//
+// file = /var/data/data.jsonlines
+// port = 8820
+// host = 0.0.0.0
+// batchsize = 30000
+//
 package main
 
 import (
@@ -14,9 +21,11 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/miku/microblob"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ini.v1"
 )
 
 var (
+	configFile        = flag.String("c", "", "load options from a config (ini) file")
 	pattern           = flag.String("r", "", "regular expression to use as key extractor")
 	toplevel          = flag.Bool("t", false, "top level key extractor")
 	keypath           = flag.String("key", "", "key to extract, json, top-level only")
@@ -39,7 +48,26 @@ func main() {
 	if flag.NArg() == 0 {
 		log.Fatal("file to index (and serve) required")
 	}
-	blobfile := flag.Arg(0)
+	var blobfile string
+	if *configFile != "" {
+		// Load config file and set flag values.
+		cfg, err := ini.Load(*configFile)
+		if err != nil {
+			log.Fatalf("could not load config file %s: %v", *configFile, err)
+		}
+		section := cfg.Section("main")
+		blobfile = section.Key("file")
+		*keypath = section.Key("key")
+		*pattern = section.Key("pattern")
+		*toplevel = section.Key("toplevel")
+		*dbFile = section.Key("dbFile")
+		*addr = section.Key("addr")
+		*logfile = section.Key("logfile")
+		*batchsize = section.Key("batchsize")
+	}
+	if blobfile == "" {
+		blobfile = flag.Arg(0)
+	}
 	if blobfile == "" {
 		log.Fatal("need a file to index or serve")
 	}

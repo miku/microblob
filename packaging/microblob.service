@@ -1,0 +1,15 @@
+[Unit]
+Description=Simplistic HTTP key-value server for JSON data.
+Documentation=man:microblob(1) http://www.github.com/miku/microblob
+After=network.target
+
+[Service]
+Type=simple
+User=daemon
+WorkingDirectory=/tmp
+ExecStart=/usr/local/sbin/microblob -c /etc/microblob/blob.conf
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
