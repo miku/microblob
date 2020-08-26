@@ -28,14 +28,6 @@ deb: $(TARGETS)
 	find packaging/deb/$(PKGNAME)/usr -type f -exec chmod 0644 {} \;
 	# Executables.
 	chmod +x packaging/deb/$(PKGNAME)/usr/local/bin/*
-	# deb contents
-	#
-	# ./etc/microblob/microblob.ini
-	# ./usr/lib/systemd/system/microblob.service
-	# ./usr/sbin/microblob
-	# ./usr/share/man/man1/microblob.1.gz
-	# ./var/cache/microblob/hello.ndjson
-	#
 	# main directory
 	mkdir -p packaging/deb/$(PKGNAME)/DEBIAN/
 	cp packaging/deb/control.$(ARCH) packaging/deb/$(PKGNAME)/DEBIAN/control
@@ -56,6 +48,9 @@ rpm: $(TARGETS)
 	mkdir -p $(HOME)/rpmbuild/{BUILD,SOURCES,SPECS,RPMS}
 	cp ./packaging/rpm/$(PKGNAME).spec $(HOME)/rpmbuild/SPECS
 	cp $(TARGETS) $(HOME)/rpmbuild/BUILD
+	cp packaging/microblob.service $(HOME)/rpmbuild/BUILD
+	cp fixtures/hello.ndjson $(HOME)/rpmbuild/BUILD
+	cp fixtures/microblob.ini $(HOME)/rpmbuild/BUILD
 	cp docs/microblob.1.gz $(HOME)/rpmbuild/BUILD
 	./packaging/rpm/buildrpm.sh $(PKGNAME)
 	cp $(HOME)/rpmbuild/RPMS/x86_64/$(PKGNAME)*.rpm .

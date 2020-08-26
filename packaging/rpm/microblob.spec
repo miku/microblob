@@ -19,15 +19,28 @@ A simple key value store for JSON data.
 
 %pre
 
+[ -d "/usr/local/share/microblob" ] && rm -rf /usr/local/share/microblob
+
 %install
 
-mkdir -p $RPM_BUILD_ROOT/usr/local/sbin
-install -m 755 microblob $RPM_BUILD_ROOT/usr/local/sbin
+mkdir -p $RPM_BUILD_ROOT/usr/local/bin
+install -m 755 microblob $RPM_BUILD_ROOT/usr/local/bin
 
 mkdir -p $RPM_BUILD_ROOT/usr/local/share/man/man1
 install -m 644 microblob.1.gz $RPM_BUILD_ROOT/usr/local/share/man/man1/microblob.1.gz
 
+mkdir -p $RPM_BUILD_ROOT/usr/lib/systemd/system
+install -m 755 microblob.service $RPM_BUILD_ROOT/usr/lib/systemd/system
+
+mkdir -p $RPM_BUILD_ROOT/usr/local/share/microblob
+install -m 755 hello.ndjson $RPM_BUILD_ROOT/usr/local/share/microblob
+
+mkdir -p $RPM_BUILD_ROOT/etc/microblob
+install -m 755 microblob.ini $RPM_BUILD_ROOT/etc/microblob
+
 %post
+
+chmod -R daemon.daemon /usr/local/share/microblob
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -37,8 +50,11 @@ rm -rf %{_topdir}/BUILD/%{name}
 %files
 %defattr(-,root,root)
 
-/usr/local/sbin/microblob
+/etc/microblob/microblob.ini
+/usr/lib/systemd/system/microblob.service
+/usr/local/bin/microblob
 /usr/local/share/man/man1/microblob.1.gz
+/usr/local/share/microblob/hello.ndjson
 
 %changelog
 
