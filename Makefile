@@ -15,6 +15,8 @@ clean:
 	rm -f $(PKGNAME)*.deb
 	rm -f $(PKGNAME)-*.rpm
 	rm -rf packaging/deb/$(PKGNAME)/usr
+	rm -rf packaging/deb/$(PKGNAME)/var
+	rm -rf packaging/deb/$(PKGNAME)/etc
 
 deb: $(TARGETS)
 	mkdir -p packaging/deb/$(PKGNAME)/usr/local/bin
