@@ -59,10 +59,10 @@ func main() {
 		*keypath = section.Key("key").String()
 		*pattern = section.Key("pattern").String()
 		*toplevel, err = section.Key("toplevel").Bool()
-		*dbFile = section.Key("dbFile").String()
+		*dbFile = section.Key("db").String()
 		*addr = section.Key("addr").String()
-		*logfile = section.Key("logfile").String()
-		*batchsize, err = section.Key("batchsize").Int()
+		*logfile = section.Key("log").String()
+		*batchsize, err = section.Key("batch").Int()
 	}
 	if *configFile == "" && flag.NArg() == 0 {
 		log.Fatal("file to index (and serve) required")
