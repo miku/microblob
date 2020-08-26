@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#DEBHELPER#
+
+set -e
+
+echo "Cleaning up existing example data"
+rm -rf /usr/local/share/microblob
