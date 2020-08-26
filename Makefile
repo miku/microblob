@@ -24,8 +24,27 @@ deb: $(TARGETS)
 	cp docs/microblob.1.gz packaging/deb/$(PKGNAME)/usr/share/man/man1
 	find packaging/deb/$(PKGNAME)/usr -type d -exec chmod 0755 {} \;
 	find packaging/deb/$(PKGNAME)/usr -type f -exec chmod 0644 {} \;
+	# deb contents
+	#
+	# ./etc/microblob/microblob.ini
+	# ./usr/lib/systemd/system/microblob.service
+	# ./usr/sbin/microblob
+	# ./usr/share/man/man1/microblob.1.gz
+	# ./var/cache/microblob/hello.ndjson
+	#
+	# main directory
 	mkdir -p packaging/deb/$(PKGNAME)/DEBIAN/
 	cp packaging/deb/control.$(ARCH) packaging/deb/$(PKGNAME)/DEBIAN/control
+	# systemd unit file
+	mkdir -p packaging/deb/$(PKGNAME)/usr/lib/systemd/system
+	cp packaging/$(PKGNAME).service packaging/deb/$(PKGNAME)/usr/lib/systemd/system/
+	# example data
+	mkdir -p packaging/deb/$(PKGNAME)/var/cache/microblob
+	cp fixtures/hello.ndjson packaging/deb/$(PKGNAME)/var/cache/microblob
+	# example configuration
+	mkdir -p packaging/deb/$(PKGNAME)/etc/microblob
+	cp fixtures/microblob.ini packaging/deb/$(PKGNAME)/etc/microblob
+	# build package
 	cd packaging/deb && fakeroot dpkg-deb --build $(PKGNAME) .
 	mv packaging/deb/$(PKGNAME)_*.deb .
 

@@ -21,6 +21,6 @@ require (
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/tools v0.0.0-20190611222205-d73e1c7e250b // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/ini.v1 v1.60.1 // indirect
+	gopkg.in/ini.v1 v1.60.1
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 )

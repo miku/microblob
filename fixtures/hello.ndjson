@@ -1,0 +1,2 @@
+{"id": "hello", "help": "this is an example document, adjust /etc/microblob/microblob.ini to point to the file you want to serve"}
+{"id": "info", "help": "find out more with man microblob and on https://github.com/ubleipzig/microblob"}

@@ -26,6 +26,7 @@ import (
 
 var (
 	configFile        = flag.String("c", "", "load options from a config (ini) file")
+	configFileSection = flag.String("s", "main", "the config file section to use")
 	pattern           = flag.String("r", "", "regular expression to use as key extractor")
 	toplevel          = flag.Bool("t", false, "top level key extractor")
 	keypath           = flag.String("key", "", "key to extract, json, top-level only")
@@ -45,25 +46,26 @@ func main() {
 		fmt.Println(microblob.Version)
 		os.Exit(0)
 	}
-	if flag.NArg() == 0 {
-		log.Fatal("file to index (and serve) required")
-	}
 	var blobfile string
+	log.Printf(*configFile)
 	if *configFile != "" {
 		// Load config file and set flag values.
 		cfg, err := ini.Load(*configFile)
 		if err != nil {
 			log.Fatalf("could not load config file %s: %v", *configFile, err)
 		}
-		section := cfg.Section("main")
-		blobfile = section.Key("file")
-		*keypath = section.Key("key")
-		*pattern = section.Key("pattern")
-		*toplevel = section.Key("toplevel")
-		*dbFile = section.Key("dbFile")
-		*addr = section.Key("addr")
-		*logfile = section.Key("logfile")
-		*batchsize = section.Key("batchsize")
+		section := cfg.Section(*configFileSection)
+		blobfile = section.Key("file").String()
+		*keypath = section.Key("key").String()
+		*pattern = section.Key("pattern").String()
+		*toplevel, err = section.Key("toplevel").Bool()
+		*dbFile = section.Key("dbFile").String()
+		*addr = section.Key("addr").String()
+		*logfile = section.Key("logfile").String()
+		*batchsize, err = section.Key("batchsize").Int()
+	}
+	if *configFile == "" && flag.NArg() == 0 {
+		log.Fatal("file to index (and serve) required")
 	}
 	if blobfile == "" {
 		blobfile = flag.Arg(0)
