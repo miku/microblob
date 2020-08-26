@@ -50,13 +50,18 @@ rm -rf %{_tmppath}/%{name}
 rm -rf %{_topdir}/BUILD/%{name}
 
 %files
+
 %defattr(-,root,root)
 
-/etc/microblob/microblob.ini
 /usr/lib/systemd/system/microblob.service
 /usr/local/bin/microblob
 /usr/local/share/man/man1/microblob.1.gz
+%config(noreplace) /etc/microblob/microblob.ini
+
+%defattr(-,daemon,daemon)
+
 /usr/local/share/microblob/hello.ndjson
+
 
 %changelog
 
