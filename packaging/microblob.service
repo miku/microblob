@@ -1,5 +1,5 @@
 [Unit]
-Description=Simplistic HTTP key-value server for JSON data.
+Description=Simplistic HTTP key-value server for JSON data, run curl 0.0.0.0:8820/hello to test (vanilla install)
 Documentation=man:microblob(1) http://www.github.com/miku/microblob
 After=network.target
 

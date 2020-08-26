@@ -19,7 +19,9 @@ A simple key value store for JSON data.
 
 %pre
 
-[ -d "/usr/local/share/microblob" ] && rm -rf /usr/local/share/microblob
+if [ -d "/usr/local/share/microblob" ]; then
+    rm -rf /usr/local/share/microblob
+fi
 
 %install
 
@@ -40,7 +42,7 @@ install -m 755 microblob.ini $RPM_BUILD_ROOT/etc/microblob
 
 %post
 
-chmod -R daemon.daemon /usr/local/share/microblob
+chown -R daemon.daemon /usr/local/share/microblob
 
 %clean
 rm -rf $RPM_BUILD_ROOT
