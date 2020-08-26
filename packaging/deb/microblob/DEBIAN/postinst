@@ -7,8 +7,9 @@ set -e
 USER="daemon"
 
 echo "Setting up microblob example data at /usr/local/share/microblob"
+echo "After starting the service run: curl -s http://0.0.0.0:8820/hello | jq ."
 
 mkdir -p /usr/local/share/microblob
 if id -u $USER > /dev/null 2>&1; then
-    chown ${USER}:${USER} /usr/local/share/microblob
+    chown -Rv ${USER}:${USER} /usr/local/share/microblob
 fi
