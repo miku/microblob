@@ -26,7 +26,7 @@ var (
 	version           = flag.Bool("version", false, "show version and exit")
 	logfile           = flag.String("log", "", "access log file, don't log if empty")
 	ignoreMissingKeys = flag.Bool("ignore-missing-keys", false, "ignore record, that do not have a the specified key")
-	dbOnly            = flag.Bool("db-only", false, "build the database only")
+	dbOnly            = flag.Bool("db-only", false, "build the database only, then exit")
 )
 
 func main() {
