@@ -41,8 +41,8 @@ deb: $(TARGETS)
 	mkdir -p packaging/deb/$(PKGNAME)/usr/lib/systemd/system
 	cp packaging/$(PKGNAME).service packaging/deb/$(PKGNAME)/usr/lib/systemd/system/
 	# example data
-	mkdir -p packaging/deb/$(PKGNAME)/var/cache/microblob
-	cp fixtures/hello.ndjson packaging/deb/$(PKGNAME)/var/cache/microblob
+	mkdir -p packaging/deb/$(PKGNAME)/usr/local/share/microblob
+	cp fixtures/hello.ndjson packaging/deb/$(PKGNAME)/usr/local/share/microblob
 	# example configuration
 	mkdir -p packaging/deb/$(PKGNAME)/etc/microblob
 	cp fixtures/microblob.ini packaging/deb/$(PKGNAME)/etc/microblob
