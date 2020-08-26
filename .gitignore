@@ -33,6 +33,8 @@ data.db
 
 microblob_.*_amd64.deb
 packaging/deb/microblob/usr
+packaging/deb/microblob/etc
+packaging/deb/microblob/var
 
 /*.deb
 /*.rpm
