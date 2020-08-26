@@ -1,6 +1,6 @@
 Summary:    A simple key value store for JSON data.
 Name:       microblob
-Version:    0.2.10
+Version:    0.2.11
 Release:    0
 License:    GPL
 BuildArch:  x86_64
