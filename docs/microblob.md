@@ -65,6 +65,15 @@ OPTIONS
 `-batch`
   Number of lines in a batch (default 100000).
 
+`-c string`
+  Load options from a config (ini) file
+
+`-create-db-only`
+  Build the database only, then exit.
+
+`-db string`
+  The root directory, by default: 1000.ldj -> 1000.ldj.05028f38.db (based on flags).
+
 `-key` *STRING*
   Key to extract, JSON, top-level only.
 
@@ -73,6 +82,9 @@ OPTIONS
 
 `-r` *PATTERN*
   Regular expression to use as key extractor.
+
+`-s string`
+  The config file section to use (default "main").
 
 `-t`
   Top level key extractor.
@@ -137,6 +149,29 @@ The response time of the last key query is exposed over HTTP as well:
 
     $ curl -s localhost:8820/debug/vars | jq .lastResponseTime
     0.001238
+
+FILES
+-----
+
+Since 0.2.12 it is possible to put options into a configuration file. This
+features was added to let microblob be managed by systemd.
+
+On installation from package, a default config file is placed at
+`/etc/microblob/microblob.ini` and systemd unit is provided. The config file
+can contain multiple sections, with `main` being used by default. Except for
+`file` entries are optional an will use default values.
+
+```
+[main]
+
+file = /var/microblob/date-2020-08-10.ldj
+db = /var/microblob/date-2020-08-10.ldj.28ed2061.db
+addr = 172.18.113.99:8820
+batch = 30000
+key = finc.id
+log = /var/log/microblob.log
+
+```
 
 BUGS
 ----

@@ -61,6 +61,15 @@ Backend to use: leveldb, debug (default "leveldb").
 \fB\fC\-batch\fR
 Number of lines in a batch (default 100000).
 .TP
+\fB\fC\-c string\fR
+Load options from a config (ini) file
+.TP
+\fB\fC\-create\-db\-only\fR
+Build the database only, then exit.
+.TP
+\fB\fC\-db string\fR
+The root directory, by default: 1000.ldj \-> 1000.ldj.05028f38.db (based on flags).
+.TP
 \fB\fC\-key\fR \fISTRING\fP
 Key to extract, JSON, top\-level only.
 .TP
@@ -69,6 +78,9 @@ Access log file, don't log if empty.
 .TP
 \fB\fC\-r\fR \fIPATTERN\fP
 Regular expression to use as key extractor.
+.TP
+\fB\fC\-s string\fR
+The config file section to use (default "main").
 .TP
 \fB\fC\-t\fR
 Top level key extractor.
@@ -147,6 +159,28 @@ The response time of the last key query is exposed over HTTP as well:
 .nf
 $ curl \-s localhost:8820/debug/vars | jq .lastResponseTime
 0.001238
+.fi
+.RE
+.SH FILES
+.PP
+Since 0.2.12 it is possible to put options into a configuration file. This
+features was added to let microblob be managed by systemd.
+.PP
+On installation from package, a default config file is placed at
+\fB\fC/etc/microblob/microblob.ini\fR and systemd unit is provided. The config file
+can contain multiple sections, with \fB\fCmain\fR being used by default. Except for
+\fB\fCfile\fR entries are optional an will use default values.
+.PP
+.RS
+.nf
+[main]
+
+file = /var/microblob/date\-2020\-08\-10.ldj
+db = /var/microblob/date\-2020\-08\-10.ldj.28ed2061.db
+addr = 172.18.113.99:8820
+batch = 30000
+key = finc.id
+log = /var/log/microblob.log
 .fi
 .RE
 .SH BUGS
