@@ -59,21 +59,30 @@ $ curl -v --data-binary @- localhost:8820/update?key=id < <(gunzip -c fixtures/f
 ```shell
 Usage of microblob:
   -addr string
-          address to serve (default "127.0.0.1:8820")
+        address to serve (default "127.0.0.1:8820")
   -backend string
-          backend to use: leveldb, debug (default "leveldb")
+        backend to use: leveldb, debug (default "leveldb")
   -batch int
-          number of lines in a batch (default 100000)
+        number of lines in a batch (default 50000)
+  -c string
+        load options from a config (ini) file
+  -create-db-only
+        build the database only, then exit
+  -db string
+        the root directory, by default: 1000.ldj -> 1000.ldj.05028f38.db (based on flags)
+  -ignore-missing-keys
+        ignore record, that do not have a the specified key
   -key string
-          key to extract, json, top-level only
+        key to extract, json, top-level only
   -log string
-          access log file, don't log if empty
+        access log file, don't log if empty
   -r string
-          regular expression to use as key extractor
+        regular expression to use as key extractor
+  -s string
+        the config file section to use (default "main")
   -t    top level key extractor
   -version
-          show version and exit
-
+        show version and exit
 ```
 
 # What it doesn't do
