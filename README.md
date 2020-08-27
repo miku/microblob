@@ -1,19 +1,20 @@
 # microblob
 
-microblob is a simplistic key-value store, that serves documents from a file
-over HTTP. It is implemented in a few hundred lines of code and does not
+microblob is a simplistic key-value store, that serves JSON documents from a
+file over HTTP. It is implemented in a few hundred lines of code and does not
 contain many features.
 
-Warning: This server **should not be exposed publicly** as it contains no security,
-rate-limiting or other safety measures whatsoever.
+Warning: This server **SHOULD NEVER BE EXPOSED PUBLICLY** as it contains no
+security, rate-limiting or other safety measures whatsoever.
 
 microblob was written in 2017 as an ad-hoc solution to replace a previous setup
-using memcachedb (which was getting slow). The main goal has been to serve
-about 200M JSON documents from a "persistent key-value store" over HTTP and to
-support frequent, fast rebuilds; with limited disk space and potentially
-limited memory. Code lacks tests and I would write it differently today.
-However, it ran without issues and happily served up to 400 requests/s with
-limited resources and with average response times of around 1ms.
+using [memcachedb](https://en.wikipedia.org/wiki/MemcacheDB) (which was getting
+slow). The main goal has been to serve about 200M JSON documents from a
+"persistent key-value store" over HTTP and to support frequent, fast rebuilds;
+with limited disk space and potentially limited memory. Code lacks tests and I
+would write it differently today. However, it ran without issues and happily
+served up to 400 requests/s with limited resources and with average response
+times of around 1ms.
 
 [![DOI](https://zenodo.org/badge/82800367.svg)](https://zenodo.org/badge/latestdoi/82800367) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
@@ -43,7 +44,7 @@ can be serveable within an hour.
 
 * ㊗️ 2017-06-30 first 100 million requests served in production
 
-More docs: [docs/microblob.md](docs/microblob.md)
+Further documentation: [docs/microblob.md](docs/microblob.md)
 
 # Update via curl
 
