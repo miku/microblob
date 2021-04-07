@@ -47,8 +47,8 @@ func main() {
 		os.Exit(0)
 	}
 	var blobfile string
-	log.Printf(*configFile)
 	if *configFile != "" {
+		log.Printf(*configFile)
 		// Load config file and set flag values.
 		cfg, err := ini.Load(*configFile)
 		if err != nil {
