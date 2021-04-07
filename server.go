@@ -1,7 +1,6 @@
 package microblob
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
