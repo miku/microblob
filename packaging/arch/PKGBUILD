@@ -1,7 +1,7 @@
 # Maintainer: Martin Czygan <martin.czygan@uni-leipzig.de>
 
 pkgname=microblob
-pkgver=0.2.12
+pkgver=0.2.13
 pkgrel=0
 pkgdesc="Serve documents from JSON over HTTP, optimize for the build-once update-never use case."
 arch=('i686' 'x86_64')
