@@ -32,6 +32,7 @@ data.db
 /fixtures/example.boltdb
 
 microblob_.*_amd64.deb
+packaging/deb/*.deb
 packaging/deb/microblob/usr
 packaging/deb/microblob/etc
 packaging/deb/microblob/var

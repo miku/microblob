@@ -12,12 +12,10 @@ import (
 	"sync"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	"github.com/schollz/progressbar"
+	"github.com/segmentio/encoding/json"
 	log "github.com/sirupsen/logrus"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // KeyExtractor extracts a string key from data.
 type KeyExtractor interface {

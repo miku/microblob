@@ -14,6 +14,7 @@ require (
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/schollz/progressbar v1.0.0
+	github.com/segmentio/encoding v0.2.19
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/syndtr/goleveldb v1.0.0
