@@ -100,5 +100,5 @@ Debian and RPM packages: see [releases](https://github.com/miku/microblob/releas
 Or:
 
 ```shell
-$ go get github.com/miku/microblob/cmd/...
+$ go install github.com/miku/microblob/cmd/microblob@latest
 ```
