@@ -246,10 +246,10 @@ func renderString(v interface{}) (s string, err error) {
 		s = fmt.Sprintf("%d", w)
 	case float64:
 		s = fmt.Sprintf("%0d", int(w))
-	case fmt.Stringer:
-		s = fmt.Sprintf("%s", w)
 	case time.Time:
 		s = w.Format(time.RFC3339)
+	case fmt.Stringer:
+		s = w.String()
 	default:
 		err = fmt.Errorf("unsupported type: %v", reflect.TypeOf(w))
 	}

@@ -23,6 +23,7 @@ type finalNewlineReader struct {
 	done bool // true, when r has been fully read
 }
 
+// Read reads from the underlying reader, appending a final newline, if it is not there already.
 func (r *finalNewlineReader) Read(p []byte) (n int, err error) {
 	if r.done {
 		if len(p) > 0 {
@@ -78,7 +79,7 @@ func (h *BlobHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	b, err := h.Backend.Get(key)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
 		errCounter.Add(1)
 		return
 	}
@@ -105,7 +106,6 @@ func (u UpdateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	extractor := ParsingExtractor{Key: key}
-
 	f, err := ioutil.TempFile("", "microblob-")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -119,18 +119,15 @@ func (u UpdateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 	defer os.Remove(f.Name())
-
 	if err := f.Close(); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("temporary file close failed: " + err.Error()))
 	}
-
 	if err := Append(u.Blobfile, f.Name(), u.Backend, extractor.ExtractKey); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("append: " + err.Error()))
 		return
 	}
-	return
 }
 
 func init() {
