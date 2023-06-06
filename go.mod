@@ -14,10 +14,10 @@ require (
 	github.com/schollz/progressbar v1.0.0
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/segmentio/encoding v0.3.6
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/thoas/stats v0.0.0-20190407194641-965cb2de1678
-	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.3.8 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/ini.v1 v1.67.0
