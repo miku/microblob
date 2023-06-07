@@ -56,6 +56,5 @@ func NewHandler(backend Backend, blobfile string) http.Handler {
 	r.Handle("/update", UpdateHandler{Backend: backend, Blobfile: blobfile})
 	r.Handle("/blob", blobHandler)     // Legacy route.
 	r.Handle("/{key:.+}", blobHandler) // Preferred.
-
 	return r
 }

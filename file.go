@@ -19,21 +19,17 @@ func Append(blobfn, fn string, backend Backend, kf KeyFunc) error {
 func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int, ignoreMissingKeys bool) (err error) {
 	mu.Lock()
 	defer mu.Unlock()
-
 	file, err := os.OpenFile(blobfn, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-
 	var offset int64
-
 	if fn != "" {
 		offset, err = file.Seek(0, io.SeekEnd)
 		if err != nil {
 			return err
 		}
-
 		f, err := os.Open(fn)
 		if err != nil {
 			return err
@@ -47,13 +43,11 @@ func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int, i
 			return err
 		}
 	}
-
 	processor := NewLineProcessor(file, backend.WriteEntries, kf)
 	processor.BatchSize = size
 	processor.InitialOffset = offset
 	processor.Verbose = true
 	processor.IgnoreMissingKeys = ignoreMissingKeys
-
 	if err = processor.RunWithWorkers(); err != nil {
 		if fn != "" {
 			if terr := os.Truncate(blobfn, offset); terr != nil {

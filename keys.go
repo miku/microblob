@@ -60,81 +60,75 @@ type workPackage struct {
 
 // RunWithWorkers start processing the input, uses multiple workers.
 func (p LineProcessor) RunWithWorkers() error {
-
-	var processingErr error
-
-	// Setup communication channels.
-	work := make(chan workPackage)
-	updates := make(chan []Entry)
-	done := make(chan bool)
-
-	// collector runs the EntryWriter on all incoming batches.
-	collector := func(ch chan []Entry, done chan bool) {
-		for batch := range ch {
-			if err := p.w(batch); err != nil {
-				if p.Verbose {
-					log.Printf("could not write batch: %v", err)
-				}
-				processingErr = err
-				break
-			}
-		}
-		done <- true
-	}
-
-	// worker takes a workPackage, creates Entries from bytes and sends the result
-	// down the sink.
-	worker := func(queue chan workPackage, wg *sync.WaitGroup) {
-		defer wg.Done()
-		for pkg := range queue {
-			offset := pkg.offset
-			var entries []Entry
-			for _, b := range pkg.docs {
-				key, err := p.f(b)
-				if err != nil {
+	var (
+		processingErr error
+		// Setup communication channels.
+		work    = make(chan workPackage)
+		updates = make(chan []Entry)
+		done    = make(chan bool)
+		// collector runs the EntryWriter on all incoming batches.
+		collector = func(ch chan []Entry, done chan bool) {
+			for batch := range ch {
+				if err := p.w(batch); err != nil {
 					if p.Verbose {
-						log.Printf("worker error: %v", err)
-					}
-					if p.IgnoreMissingKeys {
-						if p.Verbose {
-							log.Printf("ignoring missing key at offset: %d", offset)
-							continue
-						}
+						log.Printf("could not write batch: %v", err)
 					}
 					processingErr = err
 					break
 				}
-				length := int64(len(b))
-				entries = append(entries, Entry{key, offset, length})
-				offset += length
 			}
-			updates <- entries
-			if processingErr != nil {
-				if p.Verbose {
-					log.Printf("worker failed: %v", processingErr)
+			done <- true
+		}
+		// worker takes a workPackage, creates Entries from bytes and sends the result
+		// down the sink.
+		worker = func(queue chan workPackage, wg *sync.WaitGroup) {
+			defer wg.Done()
+			for pkg := range queue {
+				offset := pkg.offset
+				var entries []Entry
+				for _, b := range pkg.docs {
+					key, err := p.f(b)
+					if err != nil {
+						if p.Verbose {
+							log.Printf("worker error: %v", err)
+						}
+						if p.IgnoreMissingKeys {
+							if p.Verbose {
+								log.Printf("ignoring missing key at offset: %d", offset)
+								continue
+							}
+						}
+						processingErr = err
+						break
+					}
+					length := int64(len(b))
+					entries = append(entries, Entry{key, offset, length})
+					offset += length
 				}
-				break
+				updates <- entries
+				if processingErr != nil {
+					if p.Verbose {
+						log.Printf("worker failed: %v", processingErr)
+					}
+					break
+				}
 			}
 		}
-	}
-
-	var wg sync.WaitGroup
-
+		wg sync.WaitGroup
+	)
 	for i := 0; i < runtime.NumCPU(); i++ {
 		wg.Add(1)
 		go worker(work, &wg)
 	}
-
 	go collector(updates, done)
-
-	br := bufio.NewReader(p.r)
-	var offset = p.InitialOffset
-	var blen int64
-	batch := [][]byte{}
-
-	var filesize int64
-	var bar *progressbar.ProgressBar
-
+	var (
+		br       = bufio.NewReader(p.r)
+		offset   = p.InitialOffset
+		blen     int64
+		batch    = [][]byte{}
+		filesize int64
+		bar      *progressbar.ProgressBar
+	)
 	if f, ok := p.r.(*os.File); ok {
 		fi, err := f.Stat()
 		if err != nil {
@@ -143,7 +137,6 @@ func (p LineProcessor) RunWithWorkers() error {
 		filesize = fi.Size()
 		bar = progressbar.New(int(filesize))
 	}
-
 	for {
 		b, err := br.ReadBytes('\n')
 		if err == io.EOF {
@@ -175,21 +168,17 @@ func (p LineProcessor) RunWithWorkers() error {
 		batch = append(batch, b)
 		blen += int64(len(b))
 	}
-
 	bb := make([][]byte, len(batch))
 	copy(bb, batch)
 	work <- workPackage{docs: bb, offset: offset}
-
 	if _, ok := p.r.(*os.File); ok {
 		bar.Add(int(filesize))
 		fmt.Println()
 	}
-
 	close(work)
 	wg.Wait()
 	close(updates)
 	<-done
-
 	return processingErr
 }
 
