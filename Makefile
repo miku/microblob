@@ -8,7 +8,7 @@ all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
 	go get -v ./...
-	go build -ldflags="-s -w" -v -o $@ $<
+	CGO_ENABLED=0 go build -ldflags="-s -w" -v -o $@ $<
 
 clean:
 	rm -f $(TARGETS)
