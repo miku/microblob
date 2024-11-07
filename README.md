@@ -2,7 +2,8 @@
 
 ----
 
-Update: Main deployment has been decommissioned. This repo is only update on a irregular basis.
+NOTICE: Main deployment has been decommissioned. Do not expect this repo to
+receive updates in the future.
 
 ----
 
