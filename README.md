@@ -22,7 +22,7 @@ would write it differently today. However, it ran without issues and happily
 served up to 400 requests/s with limited resources and with average response
 times of around 1ms.
 
-[![DOI](https://zenodo.org/badge/82800367.svg)](https://zenodo.org/badge/latestdoi/82800367) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![DOI](https://zenodo.org/badge/82800367.svg)](https://zenodo.org/badge/latestdoi/82800367) [![Project Status: Inactive – The project has reached a stable, usable state but is no longer being actively developed; support/maintenance will be provided as time allows.](https://www.repostatus.org/badges/latest/inactive.svg)](https://www.repostatus.org/#inactive)
 
 This project has been developed for [Project finc](https://finc.info) at [Leipzig University Library](https://ub.uni-leipzig.de).
 
