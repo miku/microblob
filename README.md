@@ -1,5 +1,11 @@
 # microblob
 
+----
+
+Update: Main deployment has been decommissioned. This repo is only update on a irregular basis.
+
+----
+
 microblob is a simplistic key-value store, that serves JSON documents from a
 file over HTTP. It is implemented in a few hundred lines of code and does not
 contain many features.
