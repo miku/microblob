@@ -1,0 +1,47 @@
+name: microblob
+arch: ${GOARCH}
+platform: linux
+version: ${SEMVER}
+version_schema: semver
+epoch: 0
+release: 0
+section: default
+priority: extra
+maintainer: Martin Czygan <martin.czygan@gmail.com>
+description: Simple key value store for JSON data. This server is optimized for write-once, read-often kind of setups.
+vendor: Leipzig University Library
+homepage: https://github.com/miku/microblob
+license: MIT
+disable_globbing: false
+
+contents:
+  # Binary
+  - src: microblob
+    dst: /usr/local/bin/microblob
+    file_info:
+      mode: 0755
+
+  # Man page
+  - src: docs/microblob.1.gz
+    dst: /usr/share/man/man1/microblob.1.gz
+
+  # Systemd service
+  - src: packaging/microblob.service
+    dst: /usr/lib/systemd/system/microblob.service
+
+  # Example data
+  - src: fixtures/hello.ndjson
+    dst: /usr/local/share/microblob/hello.ndjson
+
+  # Example configuration
+  - src: fixtures/microblob.ini
+    dst: /etc/microblob/microblob.ini
+    type: config
+
+umask: 0o002
+
+deb:
+  compression: zstd
+
+rpm:
+  compression: zstd
