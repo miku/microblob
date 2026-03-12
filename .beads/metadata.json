@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "microblob",
+  "project_id": "b222c48c-2754-43ff-bf21-7cb4f295c331"
+}
