@@ -10,6 +10,7 @@ $(TARGETS): %: cmd/%/main.go
 	go get -v ./...
 	CGO_ENABLED=0 go build -ldflags="-s -w" -v -o $@ $<
 
+.PHONY: clean
 clean:
 	rm -f $(TARGETS)
 	rm -f $(PKGNAME)*.deb
@@ -18,6 +19,11 @@ clean:
 	rm -rf packaging/deb/$(PKGNAME)/var
 	rm -rf packaging/deb/$(PKGNAME)/etc
 
+.PHONY: test
+test:
+	go test -v ./...
+
+.PHONY: deb
 deb: $(TARGETS)
 	mkdir -p packaging/deb/$(PKGNAME)/usr/local/bin
 	cp $(TARGETS) packaging/deb/$(PKGNAME)/usr/local/bin
@@ -44,6 +50,7 @@ deb: $(TARGETS)
 	cd packaging/deb && fakeroot dpkg-deb --build $(PKGNAME) .
 	mv packaging/deb/$(PKGNAME)_*.deb .
 
+.PHONY: rpm
 rpm: $(TARGETS)
 	mkdir -p $(HOME)/rpmbuild/{BUILD,SOURCES,SPECS,RPMS}
 	cp ./packaging/rpm/$(PKGNAME).spec $(HOME)/rpmbuild/SPECS

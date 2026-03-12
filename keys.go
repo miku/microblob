@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
-	"reflect"
 	"regexp"
 	"runtime"
 	"sync"
@@ -14,7 +14,6 @@ import (
 
 	"github.com/schollz/progressbar"
 	"github.com/segmentio/encoding/json"
-	log "github.com/sirupsen/logrus"
 )
 
 // KeyExtractor extracts a string key from data.
@@ -71,7 +70,7 @@ func (p LineProcessor) RunWithWorkers() error {
 			for batch := range ch {
 				if err := p.w(batch); err != nil {
 					if p.Verbose {
-						log.Printf("could not write batch: %v", err)
+						slog.Warn("could not write batch", "err", err)
 					}
 					processingErr = err
 					break
@@ -90,11 +89,11 @@ func (p LineProcessor) RunWithWorkers() error {
 					key, err := p.f(b)
 					if err != nil {
 						if p.Verbose {
-							log.Printf("worker error: %v", err)
+							slog.Warn("worker error", "err", err)
 						}
 						if p.IgnoreMissingKeys {
 							if p.Verbose {
-								log.Printf("ignoring missing key at offset: %d", offset)
+								slog.Info("ignoring missing key", "offset", offset)
 								continue
 							}
 						}
@@ -108,7 +107,7 @@ func (p LineProcessor) RunWithWorkers() error {
 				updates <- entries
 				if processingErr != nil {
 					if p.Verbose {
-						log.Printf("worker failed: %v", processingErr)
+						slog.Error("worker failed", "err", processingErr)
 					}
 					break
 				}
@@ -151,7 +150,7 @@ func (p LineProcessor) RunWithWorkers() error {
 		if len(batch) == p.BatchSize {
 			if processingErr != nil {
 				if p.Verbose {
-					log.Printf("stopping early due to processing err: %v", processingErr)
+					slog.Error("stopping early", "err", processingErr)
 				}
 				// XXX: leaks resources.
 				return processingErr
@@ -201,7 +200,7 @@ type ParsingExtractor struct {
 
 // ExtractKey extracts the key. Fails, if key cannot be found in the document.
 func (e ParsingExtractor) ExtractKey(b []byte) (s string, err error) {
-	dst := make(map[string]interface{})
+	dst := make(map[string]any)
 	if err = json.Unmarshal(b, &dst); err != nil {
 		return
 	}
@@ -216,7 +215,7 @@ func (e ParsingExtractor) ExtractKey(b []byte) (s string, err error) {
 type ToplevelKeyExtractor struct{}
 
 func (e ToplevelKeyExtractor) ExtractKey(b []byte) (s string, err error) {
-	dst := make(map[string]interface{})
+	dst := make(map[string]any)
 	if err = json.Unmarshal(b, &dst); err != nil {
 		return
 	}
@@ -227,7 +226,7 @@ func (e ToplevelKeyExtractor) ExtractKey(b []byte) (s string, err error) {
 }
 
 // renderString tries various ways to get a string out of a given type.
-func renderString(v interface{}) (s string, err error) {
+func renderString(v any) (s string, err error) {
 	switch w := v.(type) {
 	case string:
 		s = w
@@ -240,7 +239,7 @@ func renderString(v interface{}) (s string, err error) {
 	case fmt.Stringer:
 		s = w.String()
 	default:
-		err = fmt.Errorf("unsupported type: %v", reflect.TypeOf(w))
+		err = fmt.Errorf("unsupported type: %T", w)
 	}
 	return
 }

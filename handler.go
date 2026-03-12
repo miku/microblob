@@ -3,7 +3,6 @@ package microblob
 import (
 	"expvar"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -106,7 +105,7 @@ func (u UpdateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	extractor := ParsingExtractor{Key: key}
-	f, err := ioutil.TempFile("", "microblob-")
+	f, err := os.CreateTemp("", "microblob-")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

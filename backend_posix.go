@@ -1,4 +1,4 @@
-// +build darwin dragonfly freebsd linux nacl netbsd openbsd solaris
+//go:build darwin || dragonfly || freebsd || linux || netbsd || openbsd || solaris
 
 package microblob
 

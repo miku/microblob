@@ -7,7 +7,6 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/schollz/progressbar v1.0.0
 	github.com/segmentio/encoding v0.5.4
-	github.com/sirupsen/logrus v1.9.4
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/thoas/stats v0.0.0-20190407194641-965cb2de1678
 	gopkg.in/ini.v1 v1.67.1

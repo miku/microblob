@@ -27,7 +27,7 @@ func NewHandler(backend Backend, blobfile string) http.Handler {
 	})
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]any{
 			"name":    "microblob",
 			"version": Version,
 			"stats":   fmt.Sprintf("http://%s/stats", r.Host),

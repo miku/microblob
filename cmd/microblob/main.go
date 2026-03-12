@@ -1,4 +1,4 @@
-// Exectable for microblob, can read options from flags or an ini file:
+// Executable for microblob, can read options from flags or an ini file:
 //
 // file = /var/data/data.jsonlines
 // port = 8820
@@ -8,11 +8,12 @@
 package main
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	_ "expvar"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,7 +21,6 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/miku/microblob"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
 )
 
@@ -48,7 +48,7 @@ func main() {
 	}
 	var blobfile string
 	if *configFile != "" {
-		log.Printf(*configFile)
+		log.Printf("loading config: %s", *configFile)
 		// Load config file and set flag values.
 		cfg, err := ini.Load(*configFile)
 		if err != nil {
@@ -77,7 +77,7 @@ func main() {
 		log.Fatal("need path, pattern or -t to identify key")
 	}
 	if *dbFile == "" {
-		h := sha1.New()
+		h := sha256.New()
 		if _, err := fmt.Fprintf(h, "%s:%s:%s", *dbname, *keypath, *pattern); err != nil {
 			log.Fatal(err)
 		}
@@ -100,7 +100,7 @@ func main() {
 		}
 	}()
 
-	var loggingWriter = ioutil.Discard
+	var loggingWriter = io.Discard
 	if *logfile != "" {
 		file, err := os.OpenFile(*logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {

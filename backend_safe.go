@@ -1,4 +1,4 @@
-// +build !darwin,!dragonfly,!freebsd,!linux,!nacl,!netbsd,!openbsd,!solaris
+//go:build !darwin && !dragonfly && !freebsd && !linux && !netbsd && !openbsd && !solaris
 
 package microblob
 
@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-var mu sync.Mutex // Protects seek and read on systems without pread.
+var readMu sync.Mutex // Protects seek and read on systems without pread.
 
 // Get retrieves the data for a given key.
 // Raw timings of the operations:
@@ -58,8 +58,8 @@ func (b *LevelDBBackend) Get(key string) (data []byte, err error) {
 
 	data = make([]byte, length)
 
-	mu.Lock()
-	defer mu.Unlock()
+	readMu.Lock()
+	defer readMu.Unlock()
 
 	if _, err = b.blob.Seek(offset, io.SeekStart); err != nil {
 		return nil, err

@@ -7,8 +7,8 @@ import (
 	"sync"
 )
 
-// mu protects updates.
-var mu sync.Mutex
+// appendMu protects updates.
+var appendMu sync.Mutex
 
 // Append add a file to an existing blob file and adds their keys to the store.
 func Append(blobfn, fn string, backend Backend, kf KeyFunc) error {
@@ -17,8 +17,8 @@ func Append(blobfn, fn string, backend Backend, kf KeyFunc) error {
 
 // AppendBatchSize uses a given batch size.
 func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int, ignoreMissingKeys bool) (err error) {
-	mu.Lock()
-	defer mu.Unlock()
+	appendMu.Lock()
+	defer appendMu.Unlock()
 	file, err := os.OpenFile(blobfn, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func AppendBatchSize(blobfn, fn string, backend Backend, kf KeyFunc, size int, i
 	if err = processor.RunWithWorkers(); err != nil {
 		if fn != "" {
 			if terr := os.Truncate(blobfn, offset); terr != nil {
-				return fmt.Errorf("processing and truncate failed: %v, %v", err, terr)
+				return fmt.Errorf("processing and truncate failed: %w, %v", err, terr)
 			}
 		}
 	}

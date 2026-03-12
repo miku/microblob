@@ -113,7 +113,7 @@ func (b *LevelDBBackend) Count() (n int64, err error) {
 	return
 }
 
-// openBlob opens the raw file. Save to call many times.
+// openBlob opens the raw file. Safe to call many times.
 func (b *LevelDBBackend) openBlob() error {
 	// TODO(miku): Store a SHA of the origin file in the blob store, compare with the
 	// SHA of the currently used blob file, so we can warn the user if database and
@@ -129,7 +129,7 @@ func (b *LevelDBBackend) openBlob() error {
 	return nil
 }
 
-// openDatabase creates a LevelDB handle. Save to call many times.
+// openDatabase creates a LevelDB handle. Safe to call many times.
 func (b *LevelDBBackend) openDatabase() error {
 	if b.db != nil {
 		return nil
